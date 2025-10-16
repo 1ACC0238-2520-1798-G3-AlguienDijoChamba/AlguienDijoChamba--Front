@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="terms_and_conditions_full_text">
+        <![CDATA[
+        <b>Términos y Condiciones de Uso</b><br/>
+        <i>Última actualización: Octubre 2025</i><br/><br/>
+        Bienvenido a AlguienDijoChamba, una plataforma digital que conecta a usuarios con técnicos especializados en servicios del hogar. Al registrarte o utilizar nuestros servicios, aceptas cumplir con los siguientes términos y condiciones.<br/><br/>
+        <b>1. Definiciones</b><br/>
+        <b>Plataforma:</b> Sitio web y aplicación móvil de AlguienDijoChamba.<br/>
+        <b>Usuario:</b> Persona que utiliza la plataforma para solicitar servicios.<br/>
+        <b>Técnico:</b> Profesional registrado que ofrece servicios a través de la plataforma.<br/>
+        <b>Servicio:</b> Trabajo solicitado por un usuario y realizado por un técnico.<br/><br/>
+        <b>2. Registro y Cuenta</b><br/>
+        Debes ser mayor de 18 años para registrarte.<br/>
+        Es responsabilidad del usuario proporcionar información veraz y actualizada.<br/>
+        La plataforma se reserva el derecho de suspender o eliminar cuentas que incumplan estos términos.<br/><br/>
+        <b>3. Uso de la Plataforma</b><br/>
+        Los usuarios pueden buscar, contactar y contratar técnicos verificados.<br/>
+        Los técnicos pueden gestionar su perfil, disponibilidad y recibir solicitudes de trabajo.<br/>
+        Queda prohibido el uso de la plataforma para actividades ilegales o fraudulentas.<br/><br/>
+        <b>4. Pagos y Comisiones</b><br/>
+        Los pagos se procesan de forma segura a través de la plataforma.<br/>
+        AlguienDijoChamba cobra una comisión por cada servicio concretado.<br/>
+        Los técnicos reciben el pago de forma instantánea al finalizar el servicio, sujeto a las políticas de pago.<br/><br/>
+        <b>5. Sistema de Gamificación</b><br/>
+        Los usuarios y técnicos pueden ascender de nivel (Bronce, Plata, Oro) según su actividad.<br/>
+        Los beneficios asociados a cada nivel pueden variar y son otorgados bajo criterio de la plataforma.<br/><br/>
+        <b>6. Cancelaciones y Reembolsos</b><br/>
+        Los usuarios pueden cancelar solicitudes según las políticas establecidas.<br/>
+        Los reembolsos se gestionan caso por caso, previa evaluación.<br/><br/>
+        <b>7. Limitación de Responsabilidad</b><br/>
+        AlguienDijoChamba actúa como intermediario. No nos hacemos responsables por la calidad del servicio prestado por los técnicos.<br/>
+        Recomendamos verificar perfiles, calificaciones y reseñas antes de contratar.<br/><br/>
+        <b>8. Modificaciones</b><br/>
+        Nos reservamos el derecho de modificar estos términos en cualquier momento. Los cambios serán notificados a los usuarios.
+        ]]>
+    </string>
+
+    <string name="privacy_policy_full_text">
+        <![CDATA[
+        <b>Política de Privacidad</b><br/>
+        <i>Última actualización: Octubre 2025</i><br/><br/>
+        En AlguienDijoChamba valoramos y protegemos tu privacidad. Esta política explica cómo recopilamos, usamos y compartimos tu información.<br/><br/>
+        <b>1. Información que Recopilamos</b><br/>
+        <b>Datos personales:</b> nombre, correo electrónico, teléfono, dirección.<br/>
+        <b>Datos de perfil técnico:</b> especialidades, experiencia, certificaciones, horarios.<br/>
+        <b>Datos de transacciones:</b> historial de servicios, pagos, métodos de pago.<br/>
+        <b>Datos de uso:</b> interacciones en la app, búsquedas, reseñas.<br/><br/>
+        <b>2. Uso de la Información</b><br/>
+        Para conectar usuarios con técnicos.<br/>
+        Para procesar pagos y gestionar transacciones.<br/>
+        Para personalizar la experiencia y mejorar nuestros servicios.<br/>
+        Para enviar notificaciones relevantes (ej.: nuevas solicitudes, ofertas).<br/><br/>
+        <b>3. Compartición de Información</b><br/>
+        Con técnicos: nombre, ubicación y detalles del servicio para coordinar trabajos.<br/>
+        Con proveedores de pago: datos necesarios para procesar transacciones.<br/>
+        Con autoridades: si es requerido por ley.<br/><br/>
+        <b>4. Seguridad</b><br/>
+        Implementamos medidas técnicas y organizativas para proteger tus datos.<br/>
+        Los pagos se procesan mediante pasarelas seguras.<br/><br/>
+        <b>5. Tus Derechos</b><br/>
+        Acceder, corregir o eliminar tu información personal.<br/>
+        Oponerte al uso de tus datos para marketing.<br/>
+        Retirar tu consentimiento en cualquier momento.<br/><br/>
+        <b>6. Cookies y Tecnologías Similares</b><br/>
+        Utilizamos cookies para mejorar la experiencia de usuario y analizar el tráfico.<br/><br/>
+        <b>7. Cambios en esta Política</b><br/>
+        Notificaremos cambios significativos a través de la plataforma o por correo.<br/><br/>
+        <b>8. Contacto</b><br/>
+        Si tienes preguntas sobre esta política, escríbenos a:<br/>
+        Fixit@gmail.com
+        ]]>
+    </string>
+</resources>

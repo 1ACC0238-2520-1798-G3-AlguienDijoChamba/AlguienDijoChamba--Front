@@ -1,0 +1,72 @@
+<resources>
+    <string name="app_name">AlguienDijoChamba</string>
+
+    <string name="onboarding_image_desc">Imagen de un trabajador</string>
+    <string name="onboarding_title">Crece tus oportunidades de trabajo</string>
+    <string name="onboarding_subtitle_part1">Conéctate con clientes que necesitan tus servicios profesionales.</string>
+    <string name="onboarding_subtitle_part2">Únete a miles de técnicos verificados haciendo crecer su negocio.</string>
+    <string name="onboarding_description">Conectando talento con oportunidad. ¡Tu próximo proyecto te espera!</string>
+    <string name="button_continue">Continuar</string>
+
+    <string name="back_button_desc">Botón de retroceso</string>
+    <string name="profile_image_desc">Imagen de perfil de usuario</string>
+    <string name="auth_title">¿Listo para empezar?</string>
+    <string name="auth_join_community">Únete a nuestra comunidad profesional</string>
+    <string name="auth_description">Crea tu perfil profesional y empieza a recibir solicitudes de servicio de clientes verificados en tu área.</string>
+    <string name="button_register_professional">Registrarse como Profesional Técnico</string>
+    <string name="button_login">Iniciar Sesión</string>
+    <string name="auth_already_have_account">Ya tengo una cuenta</string>
+    <string name="auth_register_now">Regístrate ahora</string>
+
+    <string name="sign_in_title">Iniciar sesión</string>
+    <string name="logo_desc">Logo de AlguienDijoChamba</string>
+    <string name="email_label">Correo *</string>
+    <string name="email_placeholder">your.email@example.com</string>
+    <string name="password_label">Contraseña *</string>
+    <string name="password_placeholder">Crea una contraseña segura</string>
+    <string name="toggle_password_visibility_desc">Mostrar u ocultar contraseña</string>
+    <string name="forgot_password">¿Olvidaste tu contraseña?</string>
+    <string name="new_user_prompt">¿Eres un usuario nuevo?</string>
+    <string name="create_account">Crear una cuenta</string>
+    <string name="sign_in_button">Iniciar sesión</string>
+
+    <string name="register_title">Crear Cuenta Profesional</string>
+    <string name="dni_label">Número de DNI *</string>
+    <string name="nombres_label">Nombres</string>
+    <string name="apellidos_label">Apellidos</string>
+    <string name="celular_label">Número de Celular *</string>
+    <string name="confirm_password_label">Confirmar Contraseña *</string>
+    <string name="payment_method_label">Método de Pago Preferido</string>
+    <string name="payment_card">Tarjeta Crédito/Débito</string>
+    <string name="payment_wallet">Billetera Digital</string>
+    <string name="create_account_button">Crear Cuenta</string>
+
+    <string name="dialog_close_button">Cerrar</string>
+    <string name="terms_title">Términos y Condiciones</string>
+    <string name="privacy_title">Política de Privacidad</string>
+
+    <string name="complete_profile_title">Completa Tu Perfil</string>
+    <string name="profile_photo">Foto de Perfil</string>
+    <string name="upload_photo">Subir Foto</string>
+    <string name="specialties">Especialidades</string>
+    <string name="add_specialty">Añadir Especialidad</string>
+    <string name="years_of_experience">Años de Experiencia *</string>
+    <string name="hourly_rate">Precio por Hora (S/)</string>
+    <string name="professional_bio">Biografía Profesional *</string>
+    <string name="bio_placeholder">Cuéntale a los clientes sobre tu experiencia y lo que te hace un gran profesional...</string>
+    <string name="certifications">Certificaciones</string>
+    <string name="upload_certification">Subir Certificación</string>
+    <string name="profile_preview">Previsualización del Perfil</string>
+    <string name="save_profile">Guardar Perfil</string>
+
+    <string name="home_welcome_back">Bienvenido de nuevo,</string>
+    <string name="tab_requests">Solicitudes</string>
+    <string name="tab_balance">Saldo</string>
+    <string name="tab_earnings">Ganancias</string>
+    <string name="new_requests_title">Nuevas Solicitudes</string>
+    <string name="job_urgent">Urgente</string>
+    <string name="job_pending">Pendiente</string>
+    <string name="button_decline">Rechazar</string>
+    <string name="button_accept">Aceptar</string>
+
+</resources>
