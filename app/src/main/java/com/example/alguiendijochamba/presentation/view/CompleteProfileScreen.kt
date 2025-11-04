@@ -30,6 +30,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.AttachMoney
 import org.koin.androidx.compose.koinViewModel
+import com.example.alguiendijochamba.presentation.navigation.Screen // <-- Importación necesaria
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -233,7 +234,15 @@ fun CompleteProfileScreen(
                 }
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(
-                    onClick = viewModel::onSaveProfile,
+                    onClick = {
+                        viewModel.onSaveProfile {
+                            // Acción a ejecutar si el guardado es exitoso
+                            navController.navigate(Screen.MainScreen.route) {
+                                // Limpia el backstack para que no puedan regresar a registro
+                                popUpTo(Screen.AuthScreen.route) { inclusive = true }
+                            }
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth().height(56.dp)
                 ) {
                     Text(stringResource(id = R.string.save_profile))

@@ -50,7 +50,7 @@ class CompleteProfileViewModel(
 
 
     // --- LÓGICA DE NEGOCIO ACTUALIZADA ---
-    fun onSaveProfile() {
+    fun onSaveProfile(onSuccessNavigation: () -> Unit) {
         val state = _uiState.value
 
         // 1. Validaciones (igual que antes)
@@ -100,6 +100,7 @@ class CompleteProfileViewModel(
                 // 7. Éxito
                 _uiState.update { it.copy(isLoading = false, saveSuccess = true) }
                 println("¡Perfil guardado con éxito en el backend!")
+                onSuccessNavigation()
 
             } catch (e: Exception) {
                 // 8. Manejo de error
