@@ -1,5 +1,6 @@
 package com.example.alguiendijochamba.presentation.view
 
+import android.app.Application // <-- 1. IMPORT NECESARIO
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,6 +14,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext // <-- 2. IMPORT NECESARIO
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -25,18 +27,22 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.alguiendijochamba.R
+import com.example.alguiendijochamba.presentation.navigation.Screen
 import com.example.alguiendijochamba.presentation.viewmodel.SignInViewModel
+import com.example.alguiendijochamba.presentation.viewmodel.SignInViewModelFactory // <-- 3. IMPORT NECESARIO
 import com.example.alguiendijochamba.ui.theme.AlguienDijoChambaTheme
 import com.example.alguiendijochamba.ui.theme.LightBlue
 import com.example.alguiendijochamba.ui.theme.PrimaryBlue
 import androidx.compose.foundation.text.KeyboardOptions
-import com.example.alguiendijochamba.presentation.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignInScreen(
     navController: NavController,
-    viewModel: SignInViewModel = viewModel()
+    // --- 4. CORRECCIÓN: Usamos la Factory para crear el ViewModel ---
+    viewModel: SignInViewModel = viewModel(
+        factory = SignInViewModelFactory(LocalContext.current.applicationContext as Application)
+    )
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -66,7 +72,7 @@ fun SignInScreen(
 
             // Logo de la empresa
             Image(
-                painter = painterResource(id = R.drawable.logo_placeholder), // Reemplaza con tu logo
+                painter = painterResource(id = R.drawable.logo_placeholder),
                 contentDescription = stringResource(id = R.string.logo_desc),
                 modifier = Modifier.fillMaxWidth(0.8f)
             )
@@ -76,7 +82,7 @@ fun SignInScreen(
             // Campo de Email
             OutlinedTextField(
                 value = uiState.email,
-                onValueChange = viewModel::onEmailChange, // <-- CORREGIDO: sin guion
+                onValueChange = viewModel::onEmailChange,
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(id = R.string.email_label)) },
                 placeholder = { Text(stringResource(id = R.string.email_placeholder)) },
@@ -134,7 +140,6 @@ fun SignInScreen(
                     color = LightBlue,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable {
-                        // Vuelve a la pantalla anterior que es la de registro
                         navController.navigate(Screen.RegisterScreen.route)
                     }
                 )
@@ -145,13 +150,13 @@ fun SignInScreen(
             // Botón de Sign In
             Button(
                 onClick = {
-                    viewModel.onSignInClicked {
-                        navController.navigate(Screen.HomeScreen.route) {
-                            // Limpia toda la pila de navegación anterior
+                    viewModel.onSignInClicked { token ->
+                        // --- 5. CORRECCIÓN: Navegamos a MainScreen ---
+                        navController.navigate(Screen.MainScreen.route) {
                             popUpTo(0)
                         }
                     }
-                }, // <-- Se movió la coma aquí, después de la llave de cierre.
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -168,10 +173,3 @@ fun SignInScreen(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun SignInScreenPreview() {
-    AlguienDijoChambaTheme {
-        SignInScreen(navController = rememberNavController())
-    }
-}

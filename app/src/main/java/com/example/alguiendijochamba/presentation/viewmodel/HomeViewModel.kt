@@ -1,10 +1,14 @@
 package com.example.alguiendijochamba.presentation.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.alguiendijochamba.data.repository.UserRepositoryImpl
 import com.example.alguiendijochamba.domain.model.JobRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.util.Date
 
 data class HomeUiState(
@@ -16,16 +20,47 @@ data class HomeUiState(
     val selectedTab: Int = 0, // 0: Requests, 1: Balance, 2: Earnings
     val newRequests: List<JobRequest> = emptyList(),
     val messageCount: Int = 3,
-    val notificationCount: Int = 3
+    val notificationCount: Int = 3,
+    val isLoading: Boolean = false,
+    val error: String? = null
 )
 
-class HomeViewModel : ViewModel() {
+class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
+    private val repository = UserRepositoryImpl(application)
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState = _uiState.asStateFlow()
 
     init {
         loadNewRequests()
+        loadUserProfile()
+    }
+
+    fun loadUserProfile() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            repository.getMyProfile()
+                .onSuccess { profile ->
+                    _uiState.update {
+                        it.copy(
+                            userName = profile.userName,
+                            professionalLevel = profile.professionalLevel,
+                            starRating = profile.starRating,
+                            completedJobs = profile.completedJobs,
+                            availableBalance = profile.availableBalance,
+                            isLoading = false
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = error.message ?: "Error desconocido"
+                        )
+                    }
+                }
+        }
     }
 
     fun onTabSelected(tabIndex: Int) {

@@ -1,18 +1,22 @@
 package com.example.alguiendijochamba.presentation.view
 
+import android.app.Application
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.ChatBubble
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -20,71 +24,47 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.alguiendijochamba.domain.model.JobRequest
+import com.example.alguiendijochamba.presentation.viewmodel.HomeUiState
 import com.example.alguiendijochamba.presentation.viewmodel.HomeViewModel
+import com.example.alguiendijochamba.presentation.viewmodel.HomeViewModelFactory
 import com.example.alguiendijochamba.ui.theme.PrimaryBlue
-import com.example.alguiendijochamba.presentation.viewmodel.HomeUiState // <-- Agrega esta línea
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: HomeViewModel = viewModel()
+    // --- ✅ CORRECCIÓN AQUÍ: Usamos la Factory ---
+    viewModel: HomeViewModel = viewModel(
+        factory = HomeViewModelFactory(LocalContext.current.applicationContext as Application)
+    )
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var selectedBottomNavItem by remember { mutableStateOf(0) }
-    val bottomNavItems = listOf("Home", "Requests", "Calendar", "Payments", "Profile")
-
-    Scaffold(
-        bottomBar = {
-            NavigationBar {
-                bottomNavItems.forEachIndexed { index, item ->
-                    NavigationBarItem(
-                        icon = {
-                            Icon(
-                                imageVector = when (index) {
-                                    0 -> Icons.Default.Home
-                                    1 -> Icons.Default.ListAlt
-                                    2 -> Icons.Default.CalendarToday
-                                    3 -> Icons.Default.Payment
-                                    else -> Icons.Default.Person
-                                },
-                                contentDescription = item
-                            )
-                        },
-                        label = { Text(item) },
-                        selected = selectedBottomNavItem == index,
-                        onClick = { selectedBottomNavItem = index }
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF0F2F5))
+    ) {
+        item { WelcomeHeader(uiState) }
+        item {
+            val tabs = listOf("Solicitudes", "Saldo", "Ganancias")
+            TabRow(selectedTabIndex = uiState.selectedTab) {
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = uiState.selectedTab == index,
+                        onClick = { viewModel.onTabSelected(index) },
+                        text = { Text(title) }
                     )
                 }
             }
         }
-    ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(Color(0xFFF0F2F5)) // Un gris claro de fondo
-        ) {
-            item { WelcomeHeader(uiState) }
-            item {
-                val tabs = listOf("Requests", "Balance", "Earnings")
-                TabRow(selectedTabIndex = uiState.selectedTab) {
-                    tabs.forEachIndexed { index, title ->
-                        Tab(
-                            selected = uiState.selectedTab == index,
-                            onClick = { viewModel.onTabSelected(index) },
-                            text = { Text(title) }
-                        )
-                    }
-                }
-            }
-
-            item {
-                when (uiState.selectedTab) {
-                    0 -> RequestsTabContent(uiState.newRequests, viewModel)
-                    1 -> BalanceTabContent() // Crear este Composable
-                    2 -> EarningsTabContent() // Crear este Composable
-                }
+        item {
+            when (uiState.selectedTab) {
+                0 -> RequestsTabContent(uiState.newRequests, viewModel)
+                1 -> BalanceTabContent()
+                2 -> EarningsTabContent()
             }
         }
     }
@@ -105,16 +85,16 @@ fun WelcomeHeader(uiState: HomeUiState) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Text("Welcome back,", color = Color.White.copy(alpha = 0.8f))
+                    Text("Bienvenido de nuevo,", color = Color.White.copy(alpha = 0.8f))
                     Text(uiState.userName, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 }
                 Row {
-                    BadgedBox(badge = { Badge { Text("${uiState.messageCount}") } }) {
-                        Icon(Icons.Default.ChatBubble, contentDescription = "Messages", tint = Color.White)
+                    BadgedBox(badge = { if (uiState.messageCount > 0) Badge { Text("${uiState.messageCount}") } }) {
+                        Icon(Icons.Default.ChatBubble, contentDescription = "Mensajes", tint = Color.White)
                     }
                     Spacer(Modifier.width(16.dp))
-                    BadgedBox(badge = { Badge { Text("${uiState.notificationCount}") } }) {
-                        Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = Color.White)
+                    BadgedBox(badge = { if (uiState.notificationCount > 0) Badge { Text("${uiState.notificationCount}") } }) {
+                        Icon(Icons.Default.Notifications, contentDescription = "Notificaciones", tint = Color.White)
                     }
                 }
             }
@@ -127,14 +107,14 @@ fun WelcomeHeader(uiState: HomeUiState) {
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(uiState.professionalLevel, color = Color.White, fontWeight = FontWeight.Bold)
-                        Text("Completed Jobs: ${uiState.completedJobs}", color = Color.White.copy(alpha = 0.8f))
+                        Text("Trabajos completados: ${uiState.completedJobs}", color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFD700))
                             Text(" ${uiState.starRating}", color = Color.White, fontWeight = FontWeight.Bold)
                         }
-                        Text("Available Balance: S/${uiState.availableBalance}", color = Color.White.copy(alpha = 0.8f))
+                        Text("Saldo disponible: S/${"%.2f".format(uiState.availableBalance)}", color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
                     }
                 }
             }
@@ -145,26 +125,31 @@ fun WelcomeHeader(uiState: HomeUiState) {
 @Composable
 fun RequestsTabContent(requests: List<JobRequest>, viewModel: HomeViewModel) {
     Column(modifier = Modifier.padding(16.dp)) {
-        Text("New Requests", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 8.dp))
+        Text("Nuevas Solicitudes", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 8.dp))
         if (requests.isEmpty()) {
-            Text("No new requests at the moment.", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(32.dp))
+            Text("No hay nuevas solicitudes por el momento.", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(32.dp))
         } else {
-            requests.forEach { request ->
-                JobRequestCard(request = request, onAccept = { viewModel.acceptRequest(it) }, onDecline = { viewModel.declineRequest(it) })
-                Spacer(Modifier.height(16.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                requests.forEach { request ->
+                    JobRequestCard(
+                        request = request,
+                        onAccept = { viewModel.acceptRequest(request) },
+                        onDecline = { viewModel.declineRequest(request) }
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun JobRequestCard(request: JobRequest, onAccept: (JobRequest) -> Unit, onDecline: (JobRequest) -> Unit) {
+fun JobRequestCard(request: JobRequest, onAccept: () -> Unit, onDecline: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                 Text(request.clientName, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                if(request.isUrgent) Badge(containerColor = Color.Red.copy(alpha = 0.1f)) { Text("Urgent", color = Color.Red) }
-                if(request.isPending) Badge() { Text("Pending") }
+                if (request.isUrgent) Badge(containerColor = Color.Red.copy(alpha = 0.1f)) { Text("Urgente", color = Color.Red) }
+                if (request.isPending) Badge { Text("Pendiente") }
             }
             Text(request.specialty, color = PrimaryBlue, style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.height(8.dp))
@@ -176,23 +161,29 @@ fun JobRequestCard(request: JobRequest, onAccept: (JobRequest) -> Unit, onDeclin
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(4.dp))
-                Text(request.dateTime.toString(), style = MaterialTheme.typography.bodyMedium) // Formatear la fecha
+                Text(request.dateTime.toFormattedString(), style = MaterialTheme.typography.bodyMedium)
             }
             Spacer(Modifier.height(8.dp))
             Text(request.description)
             Spacer(Modifier.height(16.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                Text("S/${request.price}", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                Text("S/${"%.2f".format(request.price)}", fontWeight = FontWeight.Bold, fontSize = 20.sp)
                 Row {
-                    OutlinedButton(onClick = { onDecline(request) }) { Text("Decline") }
+                    OutlinedButton(onClick = onDecline) { Text("Rechazar") }
                     Spacer(Modifier.width(8.dp))
-                    Button(onClick = { onAccept(request) }) { Text("Accept") }
+                    Button(onClick = onAccept) { Text("Aceptar") }
                 }
             }
         }
     }
 }
 
-// Placeholder Composables for other tabs
-@Composable fun BalanceTabContent() { Text("Balance Content", modifier = Modifier.padding(16.dp)) }
-@Composable fun EarningsTabContent() { Text("Earnings Content", modifier = Modifier.padding(16.dp)) }
+// Marcadores de posición para las otras pestañas
+@Composable fun BalanceTabContent() { Text("Contenido de Saldo", modifier = Modifier.padding(16.dp)) }
+@Composable fun EarningsTabContent() { Text("Contenido de Ganancias", modifier = Modifier.padding(16.dp)) }
+
+// Función de extensión para formatear la fecha
+private fun Date.toFormattedString(): String {
+    val sdf = SimpleDateFormat("EEE, d MMM 'a las' hh:mm a", Locale("es", "ES"))
+    return sdf.format(this)
+}
