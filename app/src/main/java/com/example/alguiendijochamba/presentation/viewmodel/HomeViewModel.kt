@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 import java.util.Date
 
 data class HomeUiState(
-    val userName: String = "Carlos Rodriguez", // Se obtendrá del backend
+    val userName: String = "Cargando...",
     val professionalLevel: String = "Gold Professional",
     val starRating: Double = 4.9,
     val completedJobs: Int = 127,
@@ -46,9 +46,12 @@ class HomeViewModel(
             _uiState.update { it.copy(isLoading = true, error = null) }
             repository.getMyProfile()
                 .onSuccess { profile ->
+
+                    val fullName = profile.nombres.trim()
+
                     _uiState.update {
                         it.copy(
-                            userName = profile.userName,
+                            userName = fullName, // Usará solo el nombre (ej: "LUIS ALBERTO")
                             professionalLevel = profile.professionalLevel,
                             starRating = profile.starRating,
                             completedJobs = profile.completedJobs,
@@ -61,7 +64,9 @@ class HomeViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            error = error.message ?: "Error desconocido"
+                            error = error.message ?: "Error desconocido",
+                            // Muestra el mensaje de error o mantén "Error al cargar"
+                            userName = "Error al cargar"
                         )
                     }
                 }
