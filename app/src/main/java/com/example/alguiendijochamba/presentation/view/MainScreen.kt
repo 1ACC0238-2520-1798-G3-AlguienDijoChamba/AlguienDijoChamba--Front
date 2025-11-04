@@ -57,7 +57,9 @@ fun MainScreen() {
             composable(BottomBarScreen.Requests.route) { Text("Pantalla de Solicitudes") }
             composable(BottomBarScreen.Calendar.route) { Text("Pantalla de Calendario") }
             composable(BottomBarScreen.Payments.route) { Text("Pantalla de Pagos") }
-            composable(BottomBarScreen.Profile.route) { ProfileScreen() }
+            // --- CORRECCIÓN CLAVE ---
+            composable(BottomBarScreen.Profile.route) { ProfileScreen(navController) }
+            // -------------------------
         }
     }
 }
