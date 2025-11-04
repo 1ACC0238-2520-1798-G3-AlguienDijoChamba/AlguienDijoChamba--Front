@@ -1,21 +1,30 @@
 package com.example.alguiendijochamba.data.repository
 
-// 1. Ya no se importa el Context
+import android.content.Context
+import android.net.Uri
+import android.provider.OpenableColumns
 import com.example.alguiendijochamba.data.model.*
 import com.example.alguiendijochamba.data.remote.ApiService
 import com.example.alguiendijochamba.domain.model.Profile
 import com.example.alguiendijochamba.domain.model.ReniecInfo
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
+import java.io.FileOutputStream
+import java.lang.IllegalStateException
 
-// 2. ¡Constructor actualizado! Ahora recibe ApiService gracias a Koin
-class UserRepositoryImpl(private val apiService: ApiService) {
 
-    // 3. ¡Esta línea se elimina! Koin la provee.
-    // private val apiService: ApiService = NetworkModule.provideApiService(context.applicationContext)
+// Constructor actualizado para Koin: Recibe ApiService y Context
+class UserRepositoryImpl(
+    private val apiService: ApiService,
+    private val context: Context // Necesario para manejar los URIs de los archivos
+) {
 
+    // --- MÉTODOS DE AUTENTICACIÓN Y RENIEC ---
 
     suspend fun getReniecInfo(dni: String): Result<ReniecInfo> = try {
         println("Consultando RENIEC para DNI: $dni")
-
         val response = apiService.getReniecInfo(dni)
 
         println("Respuesta HTTP: ${response.code()}")
@@ -25,27 +34,21 @@ class UserRepositoryImpl(private val apiService: ApiService) {
         if (response.isSuccessful && response.body() != null) {
             val body = response.body()!!
 
-            // Logs para depuración
             println("Body recibido del backend RENIEC:")
-            println("   nombres: '${body.nombres}' (length: ${body.nombres?.length ?: 0})")
-            println("   apellidos (concatenado): '${body.apellidos}' (length: ${body.apellidos?.length ?: 0})")
-            println("   apellidoPaterno: '${body.apellidoPaterno}' (length: ${body.apellidoPaterno?.length ?: 0})")
-            println("   apellidoMaterno: '${body.apellidoMaterno}' (length: ${body.apellidoMaterno?.length ?: 0})")
+            println("   nombres: '${body.nombres}'")
+            println("   apellidos (concatenado): '${body.apellidos}'")
+            println("   apellidoPaterno: '${body.apellidoPaterno}'")
+            println("   apellidoMaterno: '${body.apellidoMaterno}'")
 
-            // Determinar apellidos: usar el campo que venga del backend
             val apellidoPaterno: String
             val apellidoMaterno: String
 
             if (!body.apellidos.isNullOrEmpty()) {
-                // El backend envía apellidos concatenados, los dividimos
                 println("Backend envía apellidos concatenados, dividiéndolos...")
                 val apellidosArray = body.apellidos.trim().split("\\s+".toRegex())
                 apellidoPaterno = apellidosArray.getOrNull(0) ?: ""
                 apellidoMaterno = apellidosArray.drop(1).joinToString(" ").ifEmpty { "" }
-                println("   → Paterno: '$apellidoPaterno'")
-                println("   → Materno: '$apellidoMaterno'")
             } else {
-                // El backend envía apellidos separados
                 println("Backend envía apellidos separados")
                 apellidoPaterno = body.apellidoPaterno ?: ""
                 apellidoMaterno = body.apellidoMaterno ?: ""
@@ -56,58 +59,34 @@ class UserRepositoryImpl(private val apiService: ApiService) {
                 apellidoPaterno = apellidoPaterno,
                 apellidoMaterno = apellidoMaterno
             )
-
-            println("ReniecInfo creado:")
-            println("   nombres: '${reniecInfo.nombres}'")
-            println("   apellidoPaterno: '${reniecInfo.apellidoPaterno}'")
-            println("   apellidoMaterno: '${reniecInfo.apellidoMaterno}'")
-
             Result.success(reniecInfo)
         } else {
             val errorBody = response.errorBody()?.string()
-            println("Error en respuesta RENIEC:")
-            println("   Code: ${response.code()}")
-            println("   Message: ${response.message()}")
-            println("   Error Body: $errorBody")
+            println("Error en respuesta RENIEC: $errorBody")
             Result.failure(Exception("DNI no encontrado - HTTP ${response.code()}"))
         }
     } catch (e: Exception) {
-        println("Excepción al consultar RENIEC:")
-        println("   Tipo: ${e.javaClass.simpleName}")
-        println("   Mensaje: ${e.message}")
+        println("Excepción al consultar RENIEC: ${e.message}")
         e.printStackTrace()
         Result.failure(e)
     }
 
     suspend fun registerUser(request: RegisterRequestDto): Result<String> = try {
-        println("RegisterUser llamado con:")
-        println("   Email: '${request.email}' (length: ${request.email.length}, isEmpty: ${request.email.isEmpty()})")
-        println("   Password: '${if (request.password.isNotEmpty()) "***" else "VACÍO"}' (length: ${request.password.length}, isEmpty: ${request.password.isEmpty()})")
-        println("   DNI: '${request.dni}' (length: ${request.dni.length}, isEmpty: ${request.dni.isEmpty()})")
-        println("   Nombres: '${request.nombres}' (length: ${request.nombres.length}, isEmpty: ${request.nombres.isEmpty()})")
-        println("   Apellidos: '${request.apellidos}' (length: ${request.apellidos.length}, isEmpty: ${request.apellidos.isEmpty()})")
-        println("   Celular: '${request.celular}' (length: ${request.celular.length}, isEmpty: ${request.celular.isEmpty()})")
+        println("Enviando registro al backend:")
+        println("   Nombres: '${request.nombres}', Apellidos: '${request.apellidos}'")
 
         val response = apiService.registerUser(request)
-
-        println("Respuesta del servidor:")
-        println("   isSuccessful: ${response.isSuccessful}")
-        println("   code: ${response.code()}")
-        println("   message: ${response.message()}")
 
         if (response.isSuccessful && response.body() != null) {
             println("Registro exitoso, userId: ${response.body()!!.userId}")
             Result.success(response.body()!!.userId)
         } else {
             val errorBody = response.errorBody()?.string()
-            println("Error en el registro:")
-            println("   errorBody: $errorBody")
+            println("Error en el registro: $errorBody")
             Result.failure(Exception("Error en el registro: $errorBody"))
         }
     } catch (e: Exception) {
-        println("Excepción en registerUser:")
-        println("   Tipo: ${e.javaClass.simpleName}")
-        println("   Mensaje: ${e.message}")
+        println("Excepción en registerUser: ${e.message}")
         e.printStackTrace()
         Result.failure(e)
     }
@@ -118,11 +97,11 @@ class UserRepositoryImpl(private val apiService: ApiService) {
         else Result.failure(Exception("Credenciales inválidas"))
     } catch (e: Exception) { Result.failure(e) }
 
+    // --- MÉTODOS DEL PERFIL DE USUARIO ---
+
     suspend fun getMyProfile(): Result<Profile> = try {
         val response = apiService.getMyProfile()
         if (response.isSuccessful && response.body() != null) {
-            // response.body()!! es ProfileResponseDto
-            // .toDomain() lo convierte en Profile
             Result.success(response.body()!!.toDomain())
         } else {
             Result.failure(Exception("Error al cargar perfil: ${response.code()}"))
@@ -146,7 +125,94 @@ class UserRepositoryImpl(private val apiService: ApiService) {
             Result.failure(Exception("Error al eliminar cuenta: ${response.code()}"))
         }
     } catch (e: Exception) { Result.failure(e) }
+
+
+    // --- MÉTODOS DE "COMPLETAR PERFIL" ---
+
+    suspend fun uploadProfilePhoto(photoUri: Uri): Result<String> = try {
+        val filePart = createMultipartBodyPart(photoUri, "file")
+        val response = apiService.uploadProfilePhoto(filePart)
+        if (response.isSuccessful && response.body() != null) {
+            Result.success(response.body()!!.fileUrl)
+        } else {
+            Result.failure(Exception("Error al subir foto: ${response.code()}"))
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        Result.failure(e)
+    }
+
+    suspend fun uploadCertification(certUri: Uri): Result<String> = try {
+        val filePart = createMultipartBodyPart(certUri, "file")
+        val response = apiService.uploadCertification(filePart)
+        if (response.isSuccessful && response.body() != null) {
+            Result.success(response.body()!!.fileUrl)
+        } else {
+            Result.failure(Exception("Error al subir certificación: ${response.code()}"))
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        Result.failure(e)
+    }
+
+    suspend fun completeProfile(request: CompleteProfileRequestDto): Result<Unit> = try {
+        val response = apiService.completeProfile(request)
+        if (response.isSuccessful) {
+            Result.success(Unit)
+        } else {
+            Result.failure(Exception("Error al guardar perfil: ${response.code()}"))
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        Result.failure(e)
+    }
+
+
+    // --- FUNCIÓN UTILITARIA CLAVE ---
+
+    /**
+     * Convierte un Uri (de imagen o PDF) en un MultipartBody.Part que Retrofit puede enviar.
+     */
+    private fun createMultipartBodyPart(uri: Uri, partName: String): MultipartBody.Part {
+        // 1. Obtén el stream de contenido del Uri
+        val inputStream = context.contentResolver.openInputStream(uri)
+            ?: throw IllegalStateException("No se pudo abrir el InputStream del Uri")
+
+        // 2. Obtén el tipo MIME (ej: "image/jpeg", "application/pdf")
+        val mimeType = context.contentResolver.getType(uri)
+
+        // 3. Obtén el nombre del archivo
+        var fileName = "unknown"
+        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (nameIndex != -1) {
+                    fileName = cursor.getString(nameIndex)
+                }
+            }
+        }
+
+        // Sanitizar el nombre del archivo para evitar problemas de seguridad
+        val sanitizedFileName = fileName.replace("[^a-zA-Z0-9._-]".toRegex(), "_")
+
+        // 4. Copia el stream a un archivo temporal (necesario para RequestBody)
+        val file = File(context.cacheDir, sanitizedFileName)
+        val outputStream = FileOutputStream(file)
+        inputStream.copyTo(outputStream)
+        inputStream.close()
+        outputStream.close()
+
+        // 5. Crea el RequestBody desde el archivo temporal
+        val requestBody = file.asRequestBody(mimeType?.toMediaTypeOrNull())
+
+        // Limpia el caché para que no se acumulen archivos
+        file.deleteOnExit()
+
+        // 6. Crea y devuelve el MultipartBody.Part
+        return MultipartBody.Part.createFormData(partName, file.name, requestBody)
+    }
 }
+
 
 /**
  * Función de extensión que convierte el DTO de la Red (ProfileResponseDto)
@@ -159,6 +225,7 @@ private fun ProfileResponseDto.toDomain(): Profile {
         starRating = this.starRating,
         completedJobs = this.completedJobs,
         availableBalance = this.availableBalance,
+
         nombres = this.nombres,
         apellidos = this.apellidos,
         ocupacion = this.ocupacion,

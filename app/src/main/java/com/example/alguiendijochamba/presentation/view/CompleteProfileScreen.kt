@@ -29,13 +29,14 @@ import com.example.alguiendijochamba.presentation.viewmodel.CompleteProfileViewM
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.AttachMoney
+import org.koin.androidx.compose.koinViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CompleteProfileScreen(
     navController: NavController,
-    viewModel: CompleteProfileViewModel = viewModel()
+    viewModel: CompleteProfileViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showSpecialtyDialog by remember { mutableStateOf(false) }

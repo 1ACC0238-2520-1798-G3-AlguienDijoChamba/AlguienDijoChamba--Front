@@ -1,6 +1,5 @@
 package com.example.alguiendijochamba.presentation.view
 
-import android.app.Application // <-- 1. IMPORT NECESARIO
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,7 +13,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext // <-- 2. IMPORT NECESARIO
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -23,26 +21,28 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+// 2. Esta importación se elimina
+// import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.alguiendijochamba.R
 import com.example.alguiendijochamba.presentation.navigation.Screen
 import com.example.alguiendijochamba.presentation.viewmodel.SignInViewModel
-import com.example.alguiendijochamba.presentation.viewmodel.SignInViewModelFactory // <-- 3. IMPORT NECESARIO
+// 3. Esta importación también se elimina (el archivo ya no existe)
+// import com.example.alguiendijochamba.presentation.viewmodel.SignInViewModelFactory
 import com.example.alguiendijochamba.ui.theme.AlguienDijoChambaTheme
 import com.example.alguiendijochamba.ui.theme.LightBlue
 import com.example.alguiendijochamba.ui.theme.PrimaryBlue
 import androidx.compose.foundation.text.KeyboardOptions
+// 4. Importamos koinViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignInScreen(
     navController: NavController,
-    // --- 4. CORRECCIÓN: Usamos la Factory para crear el ViewModel ---
-    viewModel: SignInViewModel = viewModel(
-        factory = SignInViewModelFactory(LocalContext.current.applicationContext as Application)
-    )
+    // 5. ¡CORRECCIÓN! Usamos koinViewModel()
+    viewModel: SignInViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -151,7 +151,7 @@ fun SignInScreen(
             Button(
                 onClick = {
                     viewModel.onSignInClicked { token ->
-                        // --- 5. CORRECCIÓN: Navegamos a MainScreen ---
+                        // Navegamos a MainScreen
                         navController.navigate(Screen.MainScreen.route) {
                             popUpTo(0)
                         }
@@ -172,4 +172,3 @@ fun SignInScreen(
         }
     }
 }
-

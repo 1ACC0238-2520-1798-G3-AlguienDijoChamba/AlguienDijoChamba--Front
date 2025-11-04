@@ -1,7 +1,6 @@
 package com.example.alguiendijochamba.presentation.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.alguiendijochamba.data.repository.UserRepositoryImpl
 import kotlinx.coroutines.flow.*
@@ -19,10 +18,16 @@ data class ProfileUiState(
     val celular: String = ""
 )
 
-class ProfileViewModel(application: Application) : AndroidViewModel(application) {
+// 3. Ya no es AndroidViewModel y recibe las dependencias en el constructor
+class ProfileViewModel(
+    private val userRepository: UserRepositoryImpl
+) : ViewModel() { // <-- ¡ESTA ES LA CORRECCIÓN!
+
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState = _uiState.asStateFlow()
-    private val userRepository = UserRepositoryImpl(application)
+
+    // 4. ¡Esta línea se elimina! Koin la provee.
+    // private val userRepository = UserRepositoryImpl(application)
 
     init { loadProfile() }
 

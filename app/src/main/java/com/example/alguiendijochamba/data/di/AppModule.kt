@@ -5,6 +5,7 @@ import com.example.alguiendijochamba.data.remote.ApiService
 import com.example.alguiendijochamba.data.remote.AuthInterceptor
 import com.example.alguiendijochamba.data.repository.UserRepositoryImpl
 import com.example.alguiendijochamba.domain.usecase.GetReniecInfoUseCase
+import com.example.alguiendijochamba.presentation.viewmodel.CompleteProfileViewModel
 import com.example.alguiendijochamba.presentation.viewmodel.HomeViewModel
 import com.example.alguiendijochamba.presentation.viewmodel.ProfileViewModel
 import com.example.alguiendijochamba.presentation.viewmodel.RegisterViewModel
@@ -22,50 +23,42 @@ val appModule = module {
 
     // --- 1. Dependencias de Red (Network) ---
 
-    // Le dice a Koin cómo crear un SessionManager (como singleton)
+    // El SessionManager DEBE ser 'single' para que solo haya una instancia
     single { SessionManager(androidContext()) }
-
-    // Le dice a Koin cómo crear el Interceptor (usa 'get()' para obtener el SessionManager)
     single { AuthInterceptor(get()) }
-
-    // Le dice a Koin cómo crear el OkHttpClient
     single {
         OkHttpClient.Builder()
-            .addInterceptor(get<AuthInterceptor>()) // Koin inyecta el interceptor
+            .addInterceptor(get<AuthInterceptor>())
             .build()
     }
-
-    // Le dice a Koin cómo crear Retrofit
     single {
         val gson = GsonBuilder().serializeNulls().create()
-
-        // ¡¡AQUÍ ESTÁ LA URL DEL BACKEND!!
         val BASE_URL = "http://10.0.2.2:5000/"
 
         Retrofit.Builder()
             .baseUrl(BASE_URL)
-            .client(get()) // Koin inyecta el OkHttpClient
+            .client(get())
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
-
-    // Le dice a Koin cómo crear el ApiService
     single {
-        get<Retrofit>().create(ApiService::class.java) // Koin inyecta Retrofit
+        get<Retrofit>().create(ApiService::class.java)
     }
 
     // --- 2. Repositorios ---
-    // Koin ahora sabe que para crear un UserRepositoryImpl, debe pasarle el ApiService
-    single { UserRepositoryImpl(get()) }
+    // Repositorio necesita ApiService y Context
+    single { UserRepositoryImpl(get(), androidContext()) }
 
     // --- 3. Casos de Uso (Use Cases) ---
-    // Koin sabe que para crear GetReniecInfoUseCase, debe pasarle el UserRepositoryImpl
     single { GetReniecInfoUseCase(get()) }
 
     // --- 4. ViewModels ---
-    // Koin se encargará de las Factories automáticamente
     viewModel { HomeViewModel(get()) }
     viewModel { ProfileViewModel(get()) }
-    viewModel { RegisterViewModel(get(), get()) } // Pide UserRepository y GetReniecInfoUseCase
-    viewModel { SignInViewModel(get(), get()) }   // Pide SessionManager y UserRepository
+
+    // ¡CORRECCIÓN! Añadimos el tercer 'get()' para SessionManager
+    viewModel { RegisterViewModel(get(), get(), get()) }
+
+    viewModel { SignInViewModel(get(), get()) }
+    viewModel { CompleteProfileViewModel(get()) }
 }

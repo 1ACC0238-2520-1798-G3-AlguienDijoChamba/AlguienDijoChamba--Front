@@ -1,6 +1,5 @@
 package com.example.alguiendijochamba.presentation.view
 
-import android.app.Application
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,12 +15,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.alguiendijochamba.domain.model.JobRequest
 import com.example.alguiendijochamba.presentation.viewmodel.HomeUiState
@@ -30,15 +27,14 @@ import com.example.alguiendijochamba.ui.theme.PrimaryBlue
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     navController: NavController,
-    // --- ✅ CORRECCIÓN AQUÍ: Usamos la Factory ---
-    viewModel: HomeViewModel = viewModel(
-        factory = HomeViewModelFactory(LocalContext.current.applicationContext as Application)
-    )
+    // 3. ¡CORRECCIÓN! Usamos koinViewModel()
+    viewModel: HomeViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     LazyColumn(

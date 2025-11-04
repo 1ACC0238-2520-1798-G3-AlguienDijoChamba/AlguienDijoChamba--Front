@@ -1,7 +1,7 @@
 package com.example.alguiendijochamba.presentation.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+// 1. Quita la importación de Application
+import androidx.lifecycle.ViewModel // 2. Cambia de AndroidViewModel a ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.alguiendijochamba.data.repository.UserRepositoryImpl
 import com.example.alguiendijochamba.domain.model.JobRequest
@@ -25,9 +25,14 @@ data class HomeUiState(
     val error: String? = null
 )
 
-class HomeViewModel(application: Application) : AndroidViewModel(application) {
+// 3. Ya no es AndroidViewModel y recibe las dependencias en el constructor
+class HomeViewModel(
+    private val repository: UserRepositoryImpl
+) : ViewModel() {
 
-    private val repository = UserRepositoryImpl(application)
+    // 4. ¡Esta línea se elimina! Koin la provee.
+    // private val repository = UserRepositoryImpl(application)
+
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState = _uiState.asStateFlow()
 

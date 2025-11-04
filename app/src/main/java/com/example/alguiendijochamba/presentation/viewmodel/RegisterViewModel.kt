@@ -1,8 +1,9 @@
 package com.example.alguiendijochamba.presentation.viewmodel
 
-// 1. Quita la importación de Application
-import androidx.lifecycle.ViewModel // 2. Cambia de AndroidViewModel a ViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.alguiendijochamba.data.local.SessionManager // <-- Importación necesaria
+import com.example.alguiendijochamba.data.model.LoginRequestDto // <-- Importación necesaria
 import com.example.alguiendijochamba.data.model.RegisterRequestDto
 import com.example.alguiendijochamba.data.repository.UserRepositoryImpl
 import com.example.alguiendijochamba.domain.usecase.GetReniecInfoUseCase
@@ -32,18 +33,14 @@ data class RegisterUiState(
     internal val apellidoMaterno: String = ""
 )
 
-// 3. Ya no es AndroidViewModel y recibe las dependencias en el constructor
 class RegisterViewModel(
     private val userRepository: UserRepositoryImpl,
-    private val getReniecInfoUseCase: GetReniecInfoUseCase
+    private val getReniecInfoUseCase: GetReniecInfoUseCase,
+    private val sessionManager: SessionManager // <-- Recibe SessionManager a través de Koin
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState = _uiState.asStateFlow()
-
-    // 4. ¡Estas líneas se eliminan! Koin las provee.
-    // private val userRepository = UserRepositoryImpl(application)
-    // private val getReniecInfoUseCase: GetReniecInfoUseCase by lazy { ... }
 
     // --- Funciones para actualizar el estado desde la UI ---
     fun onDniChange(dni: String) { if (dni.length <= 8) _uiState.update { it.copy(dni = dni, dniError = null) } }
@@ -60,13 +57,7 @@ class RegisterViewModel(
             _uiState.update { it.copy(isLoadingReniec = true, dniError = null) }
             val result = getReniecInfoUseCase.execute(_uiState.value.dni)
             result.onSuccess { reniecInfo ->
-                // Log para depuración
-                println("✅ RENIEC Info recibida:")
-                println("   Nombres: '${reniecInfo.nombres}'")
-                println("   Apellido Paterno: '${reniecInfo.apellidoPaterno}'")
-                println("   Apellido Materno: '${reniecInfo.apellidoMaterno}'")
 
-                // Concatenar apellidos para mostrar en UI
                 val apellidosCompletos = "${reniecInfo.apellidoPaterno} ${reniecInfo.apellidoMaterno}".trim()
 
                 _uiState.update {
@@ -94,15 +85,6 @@ class RegisterViewModel(
         // Validaciones
         _uiState.update { it.copy(dniError = null, celularError = null, contrasenaError = null, confirmarContrasenaError = null, terminosError = null) }
 
-        println("🔍 Validando campos antes de registrar:")
-        println("   DNI: '${_uiState.value.dni}' (length: ${_uiState.value.dni.length})")
-        println("   Nombres: '${_uiState.value.nombres}' (length: ${_uiState.value.nombres.length})")
-        println("   Apellidos UI: '${_uiState.value.apellidos}' (length: ${_uiState.value.apellidos.length})")
-        println("   Apellido Paterno: '${_uiState.value.apellidoPaterno}' (length: ${_uiState.value.apellidoPaterno.length})")
-        println("   Apellido Materno: '${_uiState.value.apellidoMaterno}' (length: ${_uiState.value.apellidoMaterno.length})")
-        println("   Email: '${_uiState.value.email}' (length: ${_uiState.value.email.length})")
-        println("   Celular: '${_uiState.value.celular}' (length: ${_uiState.value.celular.length})")
-
         val dniValido = _uiState.value.dni.length == 8
         val celularValido = _uiState.value.celular.length == 9
         val contrasenasIguales = _uiState.value.contrasena == _uiState.value.confirmarContrasena
@@ -123,17 +105,10 @@ class RegisterViewModel(
 
         if (dniValido && nombresValido && apellidosValido && emailValido && celularValido && contrasenasIguales && contrasenaValida && terminosValidos) {
             viewModelScope.launch {
-                // Concatenar apellidos para el backend
+
                 val apellidoPaternoValue = _uiState.value.apellidoPaterno.trim()
                 val apellidoMaternoValue = _uiState.value.apellidoMaterno.trim()
                 val apellidosCompletos = "$apellidoPaternoValue $apellidoMaternoValue".trim()
-
-                println("🔄 Preparando apellidos concatenados:")
-                println("   Paterno: '$apellidoPaternoValue' (length: ${apellidoPaternoValue.length})")
-                println("   Materno: '$apellidoMaternoValue' (length: ${apellidoMaternoValue.length})")
-                println("   Concatenado: '$apellidosCompletos' (length: ${apellidosCompletos.length})")
-                println("   isEmpty: ${apellidosCompletos.isEmpty()}")
-                println("   isBlank: ${apellidosCompletos.isBlank()}")
 
                 val request = RegisterRequestDto(
                     email = _uiState.value.email.trim(),
@@ -144,34 +119,34 @@ class RegisterViewModel(
                     celular = _uiState.value.celular.trim()
                 )
 
-                println("📤 Enviando registro al backend:")
-                println("   Email: '${request.email}' (length: ${request.email.length})")
-                println("   Password: '${if (request.password.isNotEmpty()) "***" else "VACÍO"}' (length: ${request.password.length})")
-                println("   DNI: '${request.dni}' (length: ${request.dni.length})")
-                println("   Nombres: '${request.nombres}' (length: ${request.nombres.length})")
-                println("   Apellidos: '${request.apellidos}' (length: ${request.apellidos.length})")
-                println("   Celular: '${request.celular}' (length: ${request.celular.length})")
-
-                // Llamada real al backend
+                // 1. Llamada de Registro
                 val result = userRepository.registerUser(request)
+
                 result.onSuccess { userId ->
-                    println("✅ Registro exitoso! ID de usuario: $userId")
-                    onSuccess()
+                    println("✅ Registro exitoso! ID de usuario: $userId. Iniciando sesión para obtener token...")
+
+                    // 2. Ejecuta login automáticamente después del registro exitoso
+                    val loginRequest = LoginRequestDto(
+                        email = request.email,
+                        password = request.password
+                    )
+
+                    val loginResult = userRepository.loginUser(loginRequest)
+
+                    loginResult.onSuccess { token ->
+                        sessionManager.saveAuthToken(token) // 3. Guarda el token en SessionManager
+                        println("✅ Login automático exitoso. Token guardado.")
+                        onSuccess() // Navega a CompleteProfileScreen
+                    }.onFailure { loginError ->
+                        println("❌ Error en login automático: ${loginError.message}")
+                        _uiState.update { it.copy(dniError = "Error en login automático después del registro.") }
+                    }
+
                 }.onFailure { error ->
                     println("❌ Error en el registro: ${error.message}")
                     _uiState.update { it.copy(dniError = "Error en el registro: ${error.message}") }
                 }
             }
-        } else {
-            println("❌ Validación fallida:")
-            println("   dniValido: $dniValido")
-            println("   nombresValido: $nombresValido")
-            println("   apellidosValido: $apellidosValido")
-            println("   emailValido: $emailValido")
-            println("   celularValido: $celularValido")
-            println("   contrasenaValida: $contrasenaValida")
-            println("   contrasenasIguales: $contrasenasIguales")
-            println("   terminosValidos: $terminosValidos")
         }
     }
 }
