@@ -45,7 +45,6 @@ fun ProfileScreen(
     val scrollState = rememberScrollState()
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    // Lanzador para seleccionar la foto de perfil
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri ->
@@ -54,7 +53,6 @@ fun ProfileScreen(
     )
 
     if (uiState.profileDeleted) {
-        // Redirigir al login después de la eliminación
         LaunchedEffect(Unit) {
             navController.navigate(Screen.SignInScreen.route) { popUpTo(0) }
         }
@@ -64,14 +62,12 @@ fun ProfileScreen(
         DeleteConfirmationDialog(
             onConfirm = {
                 showDeleteDialog = false
-                // Llama al ViewModel para eliminar y, al tener éxito, navega al inicio
                 viewModel.onDeleteProfile { navController.navigate(Screen.AuthScreen.route) { popUpTo(0) } }
             },
             onDismiss = { showDeleteDialog = false }
         )
     }
 
-    // Scaffold contiene la barra superior (TopAppBar) y el contenido principal
     Scaffold(
         topBar = {
             if (uiState.isEditing) {
@@ -87,9 +83,18 @@ fun ProfileScreen(
         }
     ) { paddingValues ->
 
+        // --- CORRECCIÓN CLAVE: El fondo principal ahora es BLANCO ---
+        // Esto asegura que el espacio no ocupado (la franja que quieres cambiar) sea blanco.
         Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues).verticalScroll(scrollState).padding(bottom = 80.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White) // <--- CAMBIO AQUÍ: Fondo principal Blanco
+                .padding(paddingValues)
+                .verticalScroll(scrollState)
+                .padding(bottom = 80.dp)
         ) {
+
+            // --- ProfileHeader MANTIENE SU FONDO AZUL ---
             ProfileHeader(
                 uiState = uiState,
                 onSettingsClick = viewModel::onEditToggle,
@@ -97,12 +102,23 @@ fun ProfileScreen(
                 onPhotoDelete = viewModel::onPhotoDelete,
                 isEditing = uiState.isEditing
             )
-            Spacer(Modifier.height(16.dp))
-            ProfileForm(
-                uiState = uiState,
-                viewModel = viewModel,
-                onDeleteRequest = { showDeleteDialog = true } // Muestra el diálogo de confirmación
-            )
+
+            // El formulario ya tenía Color.White, por lo que el formulario se une
+            // con el nuevo fondo blanco del Column principal.
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White)
+                    .padding(horizontal = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(Modifier.height(16.dp))
+                ProfileForm(
+                    uiState = uiState,
+                    viewModel = viewModel,
+                    onDeleteRequest = { showDeleteDialog = true }
+                )
+            }
         }
     }
 }
@@ -117,8 +133,10 @@ fun ProfileHeader(
     isEditing: Boolean
 ) {
     Box(
-        modifier = Modifier.fillMaxWidth().height(250.dp)
-            .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(250.dp)
+            .background(MaterialTheme.colorScheme.primary) // Mantiene el fondo azul
             .padding(16.dp)
     ) {
         // Ícono de Configuración/Ajustes

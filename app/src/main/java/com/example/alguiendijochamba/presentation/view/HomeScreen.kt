@@ -40,26 +40,36 @@ fun HomeScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF0F2F5))
+            .background(Color(0xFF2247C0))
     ) {
         item { WelcomeHeader(uiState) }
+
+        // --- Contenedor para el resto del contenido (opcional, pero buena práctica) ---
         item {
-            val tabs = listOf("Solicitudes", "Saldo", "Ganancias")
-            TabRow(selectedTabIndex = uiState.selectedTab) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = uiState.selectedTab == index,
-                        onClick = { viewModel.onTabSelected(index) },
-                        text = { Text(title) }
-                    )
+            // Este contenedor asegura que el contenido debajo de la cabecera sea blanco/gris claro
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFF0F2F5)) // Color blanco/gris claro para el contenido restante
+                    .padding(top = 16.dp) // Añade padding superior para separarse de la cabecera azul si es necesario
+            ) {
+                // Aquí iría el contenido que estaba debajo del WelcomeHeader, incluyendo las pestañas.
+                val tabs = listOf("Solicitudes", "Saldo", "Ganancias")
+                TabRow(selectedTabIndex = uiState.selectedTab) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = uiState.selectedTab == index,
+                            onClick = { viewModel.onTabSelected(index) },
+                            text = { Text(title) }
+                        )
+                    }
                 }
-            }
-        }
-        item {
-            when (uiState.selectedTab) {
-                0 -> RequestsTabContent(uiState.newRequests, viewModel)
-                1 -> BalanceTabContent()
-                2 -> EarningsTabContent()
+
+                when (uiState.selectedTab) {
+                    0 -> RequestsTabContent(uiState.newRequests, viewModel)
+                    1 -> BalanceTabContent()
+                    2 -> EarningsTabContent()
+                }
             }
         }
     }
@@ -70,7 +80,12 @@ fun WelcomeHeader(uiState: HomeUiState) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(PrimaryBlue, shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+            // CORRECCIÓN 2: Eliminamos la forma redondeada inferior aquí, ya que el fondo es uniforme
+            // .background(PrimaryBlue, shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+            .background(PrimaryBlue)
+
+            // CORRECCIÓN 3: Ajustamos el padding para que la caja ocupe el ancho completo sin márgenes blancos
+            // Mantenemos el padding interno de 24.dp, pero quitamos el superior si es un problema.
             .padding(24.dp)
     ) {
         Column {
