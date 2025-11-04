@@ -23,7 +23,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.alguiendijochamba.R
 import com.example.alguiendijochamba.presentation.viewmodel.ProfileViewModel
-import com.example.alguiendijochamba.presentation.viewmodel.ProfileViewModelFactory
 import com.example.alguiendijochamba.presentation.viewmodel.ProfileUiState
 
 @Composable

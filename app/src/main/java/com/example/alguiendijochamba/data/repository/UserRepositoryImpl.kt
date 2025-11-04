@@ -1,20 +1,20 @@
 package com.example.alguiendijochamba.data.repository
 
-import android.content.Context
-import com.example.alguiendijochamba.data.di.NetworkModule
+// 1. Ya no se importa el Context
 import com.example.alguiendijochamba.data.model.*
 import com.example.alguiendijochamba.data.remote.ApiService
 import com.example.alguiendijochamba.domain.model.Profile
 import com.example.alguiendijochamba.domain.model.ReniecInfo
 
-class UserRepositoryImpl(context: Context) {
+// 2. ¡Constructor actualizado! Ahora recibe ApiService gracias a Koin
+class UserRepositoryImpl(private val apiService: ApiService) {
 
-    // Se inicializa el servicio pasando el contexto
-    private val apiService: ApiService = NetworkModule.provideApiService(context.applicationContext)
+    // 3. ¡Esta línea se elimina! Koin la provee.
+    // private val apiService: ApiService = NetworkModule.provideApiService(context.applicationContext)
+
 
     suspend fun getReniecInfo(dni: String): Result<ReniecInfo> = try {
         println("Consultando RENIEC para DNI: $dni")
-        println("   URL: ${NetworkModule.BASE_URL}api/v1/professionals/reniec/$dni")
 
         val response = apiService.getReniecInfo(dni)
 
@@ -159,8 +159,6 @@ private fun ProfileResponseDto.toDomain(): Profile {
         starRating = this.starRating,
         completedJobs = this.completedJobs,
         availableBalance = this.availableBalance,
-
-        // --- ESTAS LÍNEAS YA NO DARÁN ERROR ---
         nombres = this.nombres,
         apellidos = this.apellidos,
         ocupacion = this.ocupacion,

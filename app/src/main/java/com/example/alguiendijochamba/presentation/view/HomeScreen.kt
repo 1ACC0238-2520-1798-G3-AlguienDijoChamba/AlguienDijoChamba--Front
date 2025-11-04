@@ -26,7 +26,6 @@ import androidx.navigation.NavController
 import com.example.alguiendijochamba.domain.model.JobRequest
 import com.example.alguiendijochamba.presentation.viewmodel.HomeUiState
 import com.example.alguiendijochamba.presentation.viewmodel.HomeViewModel
-import com.example.alguiendijochamba.presentation.viewmodel.HomeViewModelFactory
 import com.example.alguiendijochamba.ui.theme.PrimaryBlue
 import java.text.SimpleDateFormat
 import java.util.Date

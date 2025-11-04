@@ -25,7 +25,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+// 1. Quita la importación de viewModel()
+import org.koin.androidx.compose.koinViewModel // 2. Añade la importación de Koin
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.alguiendijochamba.R
@@ -43,7 +44,7 @@ import com.example.alguiendijochamba.presentation.navigation.Screen
 @Composable
 fun RegisterScreen(
     navController: NavController,
-    viewModel: RegisterViewModel = viewModel()
+    viewModel: RegisterViewModel = koinViewModel() // 3. Cambia viewModel() por koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var contrasenaVisible by remember { mutableStateOf(false) }

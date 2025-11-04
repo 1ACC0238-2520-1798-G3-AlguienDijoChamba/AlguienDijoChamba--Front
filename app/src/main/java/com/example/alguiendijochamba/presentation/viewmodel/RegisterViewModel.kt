@@ -1,7 +1,7 @@
 package com.example.alguiendijochamba.presentation.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+// 1. Quita la importación de Application
+import androidx.lifecycle.ViewModel // 2. Cambia de AndroidViewModel a ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.alguiendijochamba.data.model.RegisterRequestDto
 import com.example.alguiendijochamba.data.repository.UserRepositoryImpl
@@ -32,19 +32,18 @@ data class RegisterUiState(
     internal val apellidoMaterno: String = ""
 )
 
-// 1. Cambia a AndroidViewModel
-class RegisterViewModel(application: Application) : AndroidViewModel(application) {
+// 3. Ya no es AndroidViewModel y recibe las dependencias en el constructor
+class RegisterViewModel(
+    private val userRepository: UserRepositoryImpl,
+    private val getReniecInfoUseCase: GetReniecInfoUseCase
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState = _uiState.asStateFlow()
 
-    // Inicialización del repositorio
-    private val userRepository = UserRepositoryImpl(application)
-
-    // Use case para consultar RENIEC
-    private val getReniecInfoUseCase: GetReniecInfoUseCase by lazy {
-        GetReniecInfoUseCase(userRepository)
-    }
+    // 4. ¡Estas líneas se eliminan! Koin las provee.
+    // private val userRepository = UserRepositoryImpl(application)
+    // private val getReniecInfoUseCase: GetReniecInfoUseCase by lazy { ... }
 
     // --- Funciones para actualizar el estado desde la UI ---
     fun onDniChange(dni: String) { if (dni.length <= 8) _uiState.update { it.copy(dni = dni, dniError = null) } }

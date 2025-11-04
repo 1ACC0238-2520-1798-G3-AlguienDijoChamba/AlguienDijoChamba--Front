@@ -1,7 +1,7 @@
 package com.example.alguiendijochamba.presentation.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+// 1. Quita la importación de Application
+import androidx.lifecycle.ViewModel // 2. Cambia de AndroidViewModel a ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.alguiendijochamba.data.local.SessionManager
 import com.example.alguiendijochamba.data.model.LoginRequestDto
@@ -20,15 +20,18 @@ data class SignInUiState(
     val generalErrorMessage: String? = null
 )
 
-// Usamos AndroidViewModel para poder obtener el 'application' context
-class SignInViewModel(application: Application) : AndroidViewModel(application) {
+// 3. Ya no es AndroidViewModel y recibe las dependencias en el constructor
+class SignInViewModel(
+    private val sessionManager: SessionManager,
+    private val userRepository: UserRepositoryImpl
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SignInUiState())
     val uiState = _uiState.asStateFlow()
 
-    // El ViewModel ahora crea sus propias dependencias usando el 'application' context
-    private val sessionManager = SessionManager(application)
-    private val userRepository = UserRepositoryImpl(application)
+    // 4. ¡Estas líneas se eliminan! Koin las provee.
+    // private val sessionManager = SessionManager(application)
+    // private val userRepository = UserRepositoryImpl(application)
 
 
     fun onEmailChange(email: String) {
@@ -52,8 +55,6 @@ class SignInViewModel(application: Application) : AndroidViewModel(application) 
         return true
     }
 
-    // --- CORRECCIÓN CLAVE AQUÍ ---
-    // La función DEBE esperar un parámetro de tipo (String) -> Unit
     fun onSignInClicked(onSuccess: (String) -> Unit) {
         _uiState.update { it.copy(generalErrorMessage = null) }
 
@@ -89,4 +90,3 @@ class SignInViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 }
-
