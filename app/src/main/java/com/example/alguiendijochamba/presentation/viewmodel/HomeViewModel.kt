@@ -80,13 +80,53 @@ class HomeViewModel(
     private fun loadNewRequests() {
         // Simulación de datos del backend
         val requests = listOf(
-            JobRequest(1, "María González", "Plumbing", "San Isidro, Lima", Date(), "Kitchen sink leak needs urgent repair", 120.0, isUrgent = true),
-            JobRequest(2, "Roberto Silva", "Electrical", "Miraflores, Lima", Date(), "Install new ceiling fan in living room", 200.0, isPending = true),
-            JobRequest(3, "Ana Torres", "Carpentry", "Surco, Lima", Date(), "Custom bookshelf installation", 350.0)
+            JobRequest(
+                id = 1,
+                clientName = "María González",
+                specialty = "Plumbing",
+                location = "San Isidro, Lima",
+                dateTime = Date(),
+                description = "Kitchen sink leak needs urgent repair",
+                price = 120.0,
+                isUrgent = true,
+                // Datos de pago
+                totalAmount = 120.0,
+                initialPayment = 60.0,
+                finalPayment = 60.0,
+                isFinalPaymentCompleted = false // Pago final pendiente
+            ),
+            JobRequest(
+                id = 2,
+                clientName = "Roberto Silva",
+                specialty = "Electrical",
+                location = "Miraflores, Lima",
+                dateTime = Date(),
+                description = "Install new ceiling fan in living room",
+                price = 200.0,
+                isPending = true,
+                // Datos de pago
+                totalAmount = 200.0,
+                initialPayment = 100.0,
+                finalPayment = 100.0,
+                isFinalPaymentCompleted = true // Pago final completado
+            ),
+            JobRequest(
+                id = 3,
+                clientName = "Ana Torres",
+                specialty = "Carpentry",
+                location = "Surco, Lima",
+                dateTime = Date(),
+                description = "Custom bookshelf installation",
+                price = 350.0,
+                // Datos de pago
+                totalAmount = 350.0,
+                initialPayment = 175.0,
+                finalPayment = 175.0,
+                isFinalPaymentCompleted = true
+            )
         )
         _uiState.update { it.copy(newRequests = requests) }
     }
-
     fun acceptRequest(request: JobRequest) {
         println("Request accepted: ${request.clientName}")
         // Lógica para aceptar y eliminar de la lista de "nuevos"

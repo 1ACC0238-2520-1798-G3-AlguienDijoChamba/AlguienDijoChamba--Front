@@ -4,13 +4,14 @@ package com.example.alguiendijochamba.presentation.view
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.ChatBubble
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.automirrored.filled.Launch
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +31,7 @@ import java.util.Date
 import java.util.Locale
 import org.koin.androidx.compose.koinViewModel
 
+// --- HomeScreen y WelcomeHeader (Se mantienen sin cambios estructurales) ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -44,7 +46,6 @@ fun HomeScreen(
     ) {
         item { WelcomeHeader(uiState) }
 
-        // --- Contenedor para el resto del contenido ---
         item {
             Column(
                 modifier = Modifier
@@ -64,15 +65,19 @@ fun HomeScreen(
                 }
 
                 when (uiState.selectedTab) {
-                    // Aquí se llama a la función RequestsTabContent, pero
-                    // sin el modificador, ya que es la vista principal.
                     0 -> RequestsTabContent(uiState.newRequests, viewModel)
-                    1 -> BalanceTabContent()
+                    // --- LLAMA A LA FUNCIÓN ACTUALIZADA ---
+                    1 -> BalanceTabContent(uiState.newRequests)
                     2 -> EarningsTabContent()
                 }
             }
         }
     }
+}
+
+@Composable
+fun EarningsTabContent() {
+    TODO("Not yet implemented")
 }
 
 @Composable
@@ -98,7 +103,7 @@ fun WelcomeHeader(uiState: HomeUiState) {
                         Icon(Icons.Default.ChatBubble, contentDescription = "Mensajes", tint = Color.White)
                     }
                     Spacer(Modifier.width(16.dp))
-                    BadgedBox(badge = { if (uiState.notificationCount > 0) Badge { Badge { Text("${uiState.notificationCount}") } } }) {
+                    BadgedBox(badge = { if (uiState.notificationCount > 0) Badge { Text("${uiState.notificationCount}") } }) {
                         Icon(Icons.Default.Notifications, contentDescription = "Notificaciones", tint = Color.White)
                     }
                 }
@@ -127,14 +132,15 @@ fun WelcomeHeader(uiState: HomeUiState) {
     }
 }
 
-// --- FUNCIÓN ACTUALIZADA CON MODIFIER ---
+// --- RequestsTabContent y JobRequestCard (Se mantienen igual) ---
+
 @Composable
 fun RequestsTabContent(
     requests: List<JobRequest>,
     viewModel: HomeViewModel,
-    modifier: Modifier = Modifier // Añadimos el modifier para reutilizar
+    modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.padding(16.dp)) { // Aplicamos el modifier
+    Column(modifier = modifier.padding(16.dp)) {
         Text("Nuevas Solicitudes", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 8.dp))
         if (requests.isEmpty()) {
             Text("No hay nuevas solicitudes por el momento.", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(32.dp))
@@ -188,11 +194,113 @@ fun JobRequestCard(request: JobRequest, onAccept: () -> Unit, onDecline: () -> U
     }
 }
 
-// Marcadores de posición para las otras pestañas
-@Composable fun BalanceTabContent() { Text("Contenido de Saldo", modifier = Modifier.padding(16.dp)) }
-@Composable fun EarningsTabContent() { Text("Contenido de Ganancias", modifier = Modifier.padding(16.dp)) }
 
-// Función de extensión para formatear la fecha
+// --- NUEVO CONTENIDO PARA LA PESTAÑA BALANCE ---
+
+@Composable
+fun BalanceTabContent(jobRequests: List<JobRequest>) {
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Ledger", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.padding(bottom = 8.dp))
+
+        // Muestra todas las solicitudes (incluyendo las simuladas como completadas)
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            jobRequests.forEach { request ->
+                BalanceLedgerCard(request)
+            }
+        }
+
+        Spacer(Modifier.height(24.dp))
+
+        // Botón de "Payments" al final de la lista
+        Button(
+            onClick = { /* Acción para ir a la pantalla de pagos */ },
+            modifier = Modifier.fillMaxWidth().height(56.dp)
+        ) {
+            Text("Payments")
+        }
+    }
+}
+
+@Composable
+fun BalanceLedgerCard(request: JobRequest) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+
+            // --- Info General del Trabajo (Igual que JobRequestCard) ---
+            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                Text(request.clientName, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                // Se simula la insignia de '2' si es el primer elemento
+                if (request.id == 1) Badge(containerColor = Color.Red) { Text("2") }
+            }
+
+            Text(request.specialty, color = PrimaryBlue, style = MaterialTheme.typography.bodyMedium)
+
+            Spacer(Modifier.height(8.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(4.dp))
+                Text(request.location, style = MaterialTheme.typography.bodyMedium)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(4.dp))
+                Text(request.dateTime.toFormattedString(), style = MaterialTheme.typography.bodyMedium)
+            }
+            Spacer(Modifier.height(8.dp))
+
+            Text(request.description)
+
+            Spacer(Modifier.height(16.dp))
+
+            // --- Detalles del Ledger (Pagos) ---
+            Divider()
+            Spacer(Modifier.height(8.dp))
+
+            PaymentDetailRow(title = "Total Amount:", amount = request.totalAmount)
+            PaymentDetailRow(
+                title = "Initial Payment:",
+                amount = request.initialPayment,
+                icon = Icons.AutoMirrored.Filled.Launch, // Ícono de flecha (como en la imagen)
+                iconColor = PrimaryBlue
+            )
+            PaymentDetailRow(
+                title = "Final Payment:",
+                amount = request.finalPayment,
+                icon = if (request.isFinalPaymentCompleted) Icons.Default.CheckCircle else null,
+                iconColor = Color(0xFF4CAF50) // Verde de check
+            )
+        }
+    }
+}
+
+@Composable
+fun PaymentDetailRow(
+    title: String,
+    amount: Double,
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    iconColor: Color = Color.Transparent
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("S/${"%.2f".format(amount)}", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.width(8.dp))
+            icon?.let {
+                Icon(it, contentDescription = null, modifier = Modifier.size(20.dp), tint = iconColor)
+            }
+        }
+    }
+}
+
+
+// --- Función de extensión para formatear la fecha (Se mantiene igual) ---
 private fun Date.toFormattedString(): String {
     val sdf = SimpleDateFormat("EEE, d MMM 'a las' hh:mm a", Locale("es", "ES"))
     return sdf.format(this)
