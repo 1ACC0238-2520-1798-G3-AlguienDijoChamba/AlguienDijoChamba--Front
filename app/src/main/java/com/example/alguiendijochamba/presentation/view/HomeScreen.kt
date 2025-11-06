@@ -11,17 +11,21 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.automirrored.filled.Launch
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.alguiendijochamba.R
 import com.example.alguiendijochamba.domain.model.JobRequest
 import com.example.alguiendijochamba.presentation.viewmodel.HomeUiState
 import com.example.alguiendijochamba.presentation.viewmodel.HomeViewModel
@@ -31,7 +35,6 @@ import java.util.Date
 import java.util.Locale
 import org.koin.androidx.compose.koinViewModel
 
-// --- HomeScreen y WelcomeHeader (Se mantienen sin cambios estructurales) ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -66,7 +69,6 @@ fun HomeScreen(
 
                 when (uiState.selectedTab) {
                     0 -> RequestsTabContent(uiState.newRequests, viewModel)
-                    // --- LLAMA A LA FUNCIÓN ACTUALIZADA ---
                     1 -> BalanceTabContent(uiState.newRequests)
                     2 -> EarningsTabContent()
                 }
@@ -76,12 +78,20 @@ fun HomeScreen(
 }
 
 @Composable
-fun EarningsTabContent() {
-    TODO("Not yet implemented")
-}
-
-@Composable
 fun WelcomeHeader(uiState: HomeUiState) {
+    // Definimos las funciones Composable del Badge para que el compilador no se queje
+    val messageBadge: @Composable (BoxScope.() -> Unit)? = remember(uiState.messageCount) {
+        if (uiState.messageCount > 0) {
+            { Badge { Text("${uiState.messageCount}") } }
+        } else null
+    }
+
+    val notificationBadge: @Composable (BoxScope.() -> Unit)? = remember(uiState.notificationCount) {
+        if (uiState.notificationCount > 0) {
+            { Badge { Text("${uiState.notificationCount}") } }
+        } else null
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -99,11 +109,25 @@ fun WelcomeHeader(uiState: HomeUiState) {
                     Text(uiState.userName, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 }
                 Row {
-                    BadgedBox(badge = { if (uiState.messageCount > 0) Badge { Text("${uiState.messageCount}") } }) {
+                    // USO DEL CONDICIONAL IF EXTERNO para evitar errores de nullabilidad
+                    if (messageBadge != null) {
+                        BadgedBox(badge = messageBadge) {
+                            Icon(Icons.Default.ChatBubble, contentDescription = "Mensajes", tint = Color.White)
+                        }
+                    } else {
+                        // Mostrar sin badge si es 0
                         Icon(Icons.Default.ChatBubble, contentDescription = "Mensajes", tint = Color.White)
                     }
+
                     Spacer(Modifier.width(16.dp))
-                    BadgedBox(badge = { if (uiState.notificationCount > 0) Badge { Text("${uiState.notificationCount}") } }) {
+
+                    // USO DEL CONDICIONAL IF EXTERNO para evitar errores de nullabilidad
+                    if (notificationBadge != null) {
+                        BadgedBox(badge = notificationBadge) {
+                            Icon(Icons.Default.Notifications, contentDescription = "Notificaciones", tint = Color.White)
+                        }
+                    } else {
+                        // Mostrar sin badge si es 0
                         Icon(Icons.Default.Notifications, contentDescription = "Notificaciones", tint = Color.White)
                     }
                 }
@@ -131,8 +155,6 @@ fun WelcomeHeader(uiState: HomeUiState) {
         }
     }
 }
-
-// --- RequestsTabContent y JobRequestCard (Se mantienen igual) ---
 
 @Composable
 fun RequestsTabContent(
@@ -194,15 +216,11 @@ fun JobRequestCard(request: JobRequest, onAccept: () -> Unit, onDecline: () -> U
     }
 }
 
-
-// --- NUEVO CONTENIDO PARA LA PESTAÑA BALANCE ---
-
 @Composable
 fun BalanceTabContent(jobRequests: List<JobRequest>) {
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Ledger", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), modifier = Modifier.padding(bottom = 8.dp))
 
-        // Muestra todas las solicitudes (incluyendo las simuladas como completadas)
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             jobRequests.forEach { request ->
                 BalanceLedgerCard(request)
@@ -211,7 +229,6 @@ fun BalanceTabContent(jobRequests: List<JobRequest>) {
 
         Spacer(Modifier.height(24.dp))
 
-        // Botón de "Payments" al final de la lista
         Button(
             onClick = { /* Acción para ir a la pantalla de pagos */ },
             modifier = Modifier.fillMaxWidth().height(56.dp)
@@ -223,14 +240,23 @@ fun BalanceTabContent(jobRequests: List<JobRequest>) {
 
 @Composable
 fun BalanceLedgerCard(request: JobRequest) {
+    // Definición explícita y nullable del Badge
+    val badgeContent: @Composable (BoxScope.() -> Unit)? = remember(request.id) {
+        if (request.id == 1) {
+            { Badge { Text("2") } }
+        } else null
+    }
+
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
 
-            // --- Info General del Trabajo (Igual que JobRequestCard) ---
             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                 Text(request.clientName, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                // Se simula la insignia de '2' si es el primer elemento
-                if (request.id == 1) Badge(containerColor = Color.Red) { Text("2") }
+
+                // USO DEL CONDICIONAL IF EXTERNO para evitar errores de nullabilidad
+                if (badgeContent != null) {
+                    BadgedBox(badge = badgeContent) {}
+                }
             }
 
             Text(request.specialty, color = PrimaryBlue, style = MaterialTheme.typography.bodyMedium)
@@ -253,7 +279,6 @@ fun BalanceLedgerCard(request: JobRequest) {
 
             Spacer(Modifier.height(16.dp))
 
-            // --- Detalles del Ledger (Pagos) ---
             Divider()
             Spacer(Modifier.height(8.dp))
 
@@ -261,14 +286,14 @@ fun BalanceLedgerCard(request: JobRequest) {
             PaymentDetailRow(
                 title = "Initial Payment:",
                 amount = request.initialPayment,
-                icon = Icons.AutoMirrored.Filled.Launch, // Ícono de flecha (como en la imagen)
+                icon = Icons.AutoMirrored.Filled.Launch,
                 iconColor = PrimaryBlue
             )
             PaymentDetailRow(
                 title = "Final Payment:",
                 amount = request.finalPayment,
                 icon = if (request.isFinalPaymentCompleted) Icons.Default.CheckCircle else null,
-                iconColor = Color(0xFF4CAF50) // Verde de check
+                iconColor = Color(0xFF4CAF50)
             )
         }
     }
@@ -299,8 +324,109 @@ fun PaymentDetailRow(
     }
 }
 
+// --- IMPLEMENTACIÓN FINAL DE EARNINGS ---
 
-// --- Función de extensión para formatear la fecha (Se mantiene igual) ---
+@Composable
+fun EarningsTabContent() {
+    Column(
+        modifier = Modifier.padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Datos de prueba
+        val pendingAmount = 450.0
+        val availableAmount = 1250.0
+        val totalEarned = 8750.0
+
+        EarningsCard(
+            title = "Pending",
+            amount = pendingAmount,
+            icon = Icons.Default.ChatBubble,
+            iconColor = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        EarningsCard(
+            title = "Available",
+            amount = availableAmount,
+            icon = Icons.Default.CheckCircle,
+            iconColor = MaterialTheme.colorScheme.primary
+        )
+
+        EarningsCard(
+            title = "Total Earned",
+            amount = totalEarned,
+            icon = Icons.Default.ArrowUpward,
+            iconColor = PrimaryBlue,
+            isPainter = false
+        )
+
+        Spacer(Modifier.height(8.dp))
+
+        Button(
+            onClick = { /* Navegar a la pantalla de detalles de pagos */ },
+            modifier = Modifier.fillMaxWidth().height(56.dp)
+        ) {
+            Text("View Payment Details")
+        }
+    }
+}
+
+@Composable
+fun EarningsCard(
+    title: String,
+    amount: Double,
+    icon: Any?, // Puede ser ImageVector o Painter
+    iconColor: Color,
+    isPainter: Boolean = false
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Normal),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "S/${"%.2f".format(amount)}",
+                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Box(
+                modifier = Modifier.size(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (icon != null) {
+                    when {
+                        isPainter && icon is androidx.compose.ui.graphics.painter.Painter -> Icon(
+                            painter = icon,
+                            contentDescription = null,
+                            tint = iconColor,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        !isPainter && icon is ImageVector -> Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = iconColor,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 private fun Date.toFormattedString(): String {
     val sdf = SimpleDateFormat("EEE, d MMM 'a las' hh:mm a", Locale("es", "ES"))
     return sdf.format(this)
