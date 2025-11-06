@@ -40,7 +40,7 @@ fun HomeScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF2247C0)) // Fondo Azul
+            .background(Color(0xFF2247C0))
     ) {
         item { WelcomeHeader(uiState) }
 
