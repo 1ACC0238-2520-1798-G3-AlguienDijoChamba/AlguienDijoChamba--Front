@@ -49,7 +49,7 @@ fun HomeScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFF0F2F5)) // Fondo gris claro para el contenido restante
+                    .background(Color(0xFFF0F2F5))
                     .padding(top = 16.dp)
             ) {
                 val tabs = listOf("Solicitudes", "Saldo", "Ganancias")
