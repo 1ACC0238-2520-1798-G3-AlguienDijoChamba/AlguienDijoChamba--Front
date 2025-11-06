@@ -33,7 +33,7 @@ val appModule = module {
     }
     single {
         val gson = GsonBuilder().serializeNulls().create()
-        val BASE_URL = "http://10.0.2.2:5000/"
+        val BASE_URL   = "http://10.0.2.2:5000/"
 
         Retrofit.Builder()
             .baseUrl(BASE_URL)

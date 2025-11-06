@@ -1,3 +1,4 @@
+// presentation/view/MainScreen.kt
 package com.example.alguiendijochamba.presentation.view
 
 import androidx.compose.foundation.layout.padding
@@ -11,10 +12,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
+import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class BottomBarScreen(val route: String, val title: String, val icon: ImageVector) {
     object Home : BottomBarScreen("home", "Home", Icons.Default.Home)
@@ -54,12 +55,13 @@ fun MainScreen() {
     ) { innerPadding ->
         NavHost(navController, startDestination = BottomBarScreen.Home.route, Modifier.padding(innerPadding)) {
             composable(BottomBarScreen.Home.route) { HomeScreen(navController) }
-            composable(BottomBarScreen.Requests.route) { Text("Pantalla de Solicitudes") }
+
+            // --- CAMBIO CLAVE: Carga la pantalla de Solicitudes ---
+            composable(BottomBarScreen.Requests.route) { RequestsScreen(navController) }
+
             composable(BottomBarScreen.Calendar.route) { Text("Pantalla de Calendario") }
             composable(BottomBarScreen.Payments.route) { Text("Pantalla de Pagos") }
-            // --- CORRECCIÓN CLAVE ---
             composable(BottomBarScreen.Profile.route) { ProfileScreen(navController) }
-            // -------------------------
         }
     }
 }

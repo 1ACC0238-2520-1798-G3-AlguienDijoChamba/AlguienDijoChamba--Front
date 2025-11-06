@@ -1,3 +1,4 @@
+// presentation/view/HomeScreen.kt
 package com.example.alguiendijochamba.presentation.view
 
 import androidx.compose.foundation.background
@@ -33,27 +34,24 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun HomeScreen(
     navController: NavController,
-    // 3. ¡CORRECCIÓN! Usamos koinViewModel()
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF2247C0))
+            .background(Color(0xFF2247C0)) // Fondo Azul
     ) {
         item { WelcomeHeader(uiState) }
 
-        // --- Contenedor para el resto del contenido (opcional, pero buena práctica) ---
+        // --- Contenedor para el resto del contenido ---
         item {
-            // Este contenedor asegura que el contenido debajo de la cabecera sea blanco/gris claro
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFF0F2F5)) // Color blanco/gris claro para el contenido restante
-                    .padding(top = 16.dp) // Añade padding superior para separarse de la cabecera azul si es necesario
+                    .background(Color(0xFFF0F2F5)) // Fondo gris claro para el contenido restante
+                    .padding(top = 16.dp)
             ) {
-                // Aquí iría el contenido que estaba debajo del WelcomeHeader, incluyendo las pestañas.
                 val tabs = listOf("Solicitudes", "Saldo", "Ganancias")
                 TabRow(selectedTabIndex = uiState.selectedTab) {
                     tabs.forEachIndexed { index, title ->
@@ -66,6 +64,8 @@ fun HomeScreen(
                 }
 
                 when (uiState.selectedTab) {
+                    // Aquí se llama a la función RequestsTabContent, pero
+                    // sin el modificador, ya que es la vista principal.
                     0 -> RequestsTabContent(uiState.newRequests, viewModel)
                     1 -> BalanceTabContent()
                     2 -> EarningsTabContent()
@@ -80,12 +80,7 @@ fun WelcomeHeader(uiState: HomeUiState) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            // CORRECCIÓN 2: Eliminamos la forma redondeada inferior aquí, ya que el fondo es uniforme
-            // .background(PrimaryBlue, shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
             .background(PrimaryBlue)
-
-            // CORRECCIÓN 3: Ajustamos el padding para que la caja ocupe el ancho completo sin márgenes blancos
-            // Mantenemos el padding interno de 24.dp, pero quitamos el superior si es un problema.
             .padding(24.dp)
     ) {
         Column {
@@ -103,7 +98,7 @@ fun WelcomeHeader(uiState: HomeUiState) {
                         Icon(Icons.Default.ChatBubble, contentDescription = "Mensajes", tint = Color.White)
                     }
                     Spacer(Modifier.width(16.dp))
-                    BadgedBox(badge = { if (uiState.notificationCount > 0) Badge { Text("${uiState.notificationCount}") } }) {
+                    BadgedBox(badge = { if (uiState.notificationCount > 0) Badge { Badge { Text("${uiState.notificationCount}") } } }) {
                         Icon(Icons.Default.Notifications, contentDescription = "Notificaciones", tint = Color.White)
                     }
                 }
@@ -132,9 +127,14 @@ fun WelcomeHeader(uiState: HomeUiState) {
     }
 }
 
+// --- FUNCIÓN ACTUALIZADA CON MODIFIER ---
 @Composable
-fun RequestsTabContent(requests: List<JobRequest>, viewModel: HomeViewModel) {
-    Column(modifier = Modifier.padding(16.dp)) {
+fun RequestsTabContent(
+    requests: List<JobRequest>,
+    viewModel: HomeViewModel,
+    modifier: Modifier = Modifier // Añadimos el modifier para reutilizar
+) {
+    Column(modifier = modifier.padding(16.dp)) { // Aplicamos el modifier
         Text("Nuevas Solicitudes", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 8.dp))
         if (requests.isEmpty()) {
             Text("No hay nuevas solicitudes por el momento.", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(32.dp))
