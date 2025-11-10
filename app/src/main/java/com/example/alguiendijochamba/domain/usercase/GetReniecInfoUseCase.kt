@@ -1,25 +1,21 @@
 package com.example.alguiendijochamba.domain.usecase
 
+import com.example.alguiendijochamba.data.repository.UserRepositoryImpl
 import com.example.alguiendijochamba.domain.model.ReniecInfo
-// Asume que tienes un UserRepository que puede obtener estos datos.
-// import com.example.alguiendijochamba.domain.repository.UserRepository
 
-// Nota: Necesitarás crear un UserRepository en la capa de dominio y su implementación
-// en la capa de datos para que esto funcione. Por simplicidad, lo omitimos aquí,
-// pero el ViewModel llamará a este UseCase.
-class GetReniecInfoUseCase(/*private val repository: UserRepository*/) {
+/**
+ * Caso de uso para obtener información de RENIEC basándose en el DNI.
+ * Este caso de uso encapsula la lógica de negocio para validar el DNI
+ * y obtener la información del ciudadano desde el repositorio.
+ */
+class GetReniecInfoUseCase(private val repository: UserRepositoryImpl) {
     suspend fun execute(dni: String): Result<ReniecInfo> {
+        // Validación de negocio
         if (dni.length != 8) {
             return Result.failure(Exception("El DNI debe tener 8 dígitos."))
         }
-        // Aquí llamarías al repositorio, que a su vez llama a la ApiService.
-        // return repository.getReniecInfo(dni)
 
-        // --- Simulación para pruebas ---
-        return if (dni == "12345678") {
-            Result.success(ReniecInfo(nombres = "Juan Alberto", apellidos = "Pérez Gómez"))
-        } else {
-            Result.failure(Exception("DNI no encontrado."))
-        }
+        // Llamada al repositorio para obtener datos reales
+        return repository.getReniecInfo(dni)
     }
 }

@@ -1,4 +1,3 @@
-// presentation/navigation/Screen.kt
 package com.example.alguiendijochamba.presentation.navigation
 
 sealed class Screen(val route: String) {
@@ -7,5 +6,5 @@ sealed class Screen(val route: String) {
     object SignInScreen : Screen("sign_in_screen")
     object RegisterScreen : Screen("register_screen")
     object CompleteProfileScreen : Screen("complete_profile_screen")
-    object HomeScreen : Screen("home_screen")
+    object MainScreen : Screen("main_screen")
 }
