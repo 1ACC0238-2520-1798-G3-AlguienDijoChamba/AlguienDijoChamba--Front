@@ -1,4 +1,3 @@
-// presentation/view/MainScreen.kt
 package com.example.alguiendijochamba.presentation.view
 
 import androidx.compose.foundation.layout.padding
@@ -12,10 +11,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
-import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class BottomBarScreen(val route: String, val title: String, val icon: ImageVector) {
     object Home : BottomBarScreen("home", "Home", Icons.Default.Home)
@@ -28,7 +27,15 @@ sealed class BottomBarScreen(val route: String, val title: String, val icon: Ima
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
-    val screens = listOf(BottomBarScreen.Home, BottomBarScreen.Requests, BottomBarScreen.Calendar, BottomBarScreen.Payments, BottomBarScreen.Profile)
+
+    // Lista ordenada de las pantallas en el menú inferior
+    val screens = listOf(
+        BottomBarScreen.Home,
+        BottomBarScreen.Requests,
+        BottomBarScreen.Calendar,
+        BottomBarScreen.Payments,
+        BottomBarScreen.Profile
+    )
 
     Scaffold(
         bottomBar = {
@@ -40,11 +47,15 @@ fun MainScreen() {
                     NavigationBarItem(
                         label = { Text(screen.title) },
                         icon = { Icon(screen.icon, contentDescription = screen.title) },
+                        // Marca el ícono como seleccionado si coincide con la ruta actual
                         selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                         onClick = {
                             navController.navigate(screen.route) {
+                                // Evita que se acumulen pantallas en el back stack al cambiar de tab
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                // Evita múltiples copias de la misma pantalla si se pulsa repetidamente
                                 launchSingleTop = true
+                                // Restaura el estado de la pantalla (scroll, inputs, etc.)
                                 restoreState = true
                             }
                         }
@@ -53,14 +64,25 @@ fun MainScreen() {
             }
         }
     ) { innerPadding ->
-        NavHost(navController, startDestination = BottomBarScreen.Home.route, Modifier.padding(innerPadding)) {
+        // Grafo de navegación principal
+        NavHost(
+            navController = navController,
+            startDestination = BottomBarScreen.Home.route,
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            // 1. Home
             composable(BottomBarScreen.Home.route) { HomeScreen(navController) }
 
-            // --- CAMBIO CLAVE: Carga la pantalla de Solicitudes ---
+            // 2. Solicitudes
             composable(BottomBarScreen.Requests.route) { RequestsScreen(navController) }
 
-            composable(BottomBarScreen.Calendar.route) { Text("Pantalla de Calendario") }
-            composable(BottomBarScreen.Payments.route) { Text("Pantalla de Pagos") }
+            // 3. Calendario (Implementado)
+            composable(BottomBarScreen.Calendar.route) { CalendarScreen(navController) }
+
+            // 4. Pagos (¡NUEVO! Implementado)
+            composable(BottomBarScreen.Payments.route) { PaymentsScreen(navController) }
+
+            // 5. Perfil
             composable(BottomBarScreen.Profile.route) { ProfileScreen(navController) }
         }
     }
