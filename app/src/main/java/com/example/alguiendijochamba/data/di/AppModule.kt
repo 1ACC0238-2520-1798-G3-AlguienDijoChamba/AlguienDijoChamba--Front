@@ -17,6 +17,7 @@ import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import com.example.alguiendijochamba.data.remote.SignalRService
 
 // Este es el módulo principal de Koin
 val appModule = module {
@@ -25,6 +26,7 @@ val appModule = module {
 
     // El SessionManager DEBE ser 'single' para que solo haya una instancia
     single { SessionManager(androidContext()) }
+    single { SignalRService(get()) }
     single { AuthInterceptor(get()) }
     single {
         OkHttpClient.Builder()
@@ -41,7 +43,7 @@ val appModule = module {
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
-    single {
+    single<ApiService> {
         get<Retrofit>().create(ApiService::class.java)
     }
 
@@ -53,7 +55,12 @@ val appModule = module {
     single { GetReniecInfoUseCase(get()) }
 
     // --- 4. ViewModels ---
-    viewModel { HomeViewModel(get()) }
+    viewModel {
+        HomeViewModel(
+            repository = get<UserRepositoryImpl>(),
+            signalRService = get<SignalRService>()
+        )
+    }
     viewModel { ProfileViewModel(get()) }
 
     // ¡CORRECCIÓN! Añadimos el tercer 'get()' para SessionManager

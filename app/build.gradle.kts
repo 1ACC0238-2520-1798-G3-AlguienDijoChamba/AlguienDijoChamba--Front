@@ -64,6 +64,7 @@ dependencies {
     implementation(platform(libs.koin.bom))
     implementation(libs.insert.koin.koin.android)
     implementation(libs.insert.koin.koin.androidx.compose)
+    implementation(libs.microsoft.signalr)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

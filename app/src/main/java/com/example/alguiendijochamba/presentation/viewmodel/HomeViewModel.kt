@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.example.alguiendijochamba.data.remote.SignalRService
 import java.util.Date
 
 data class HomeUiState(
@@ -27,18 +28,37 @@ data class HomeUiState(
 
 // 3. Ya no es AndroidViewModel y recibe las dependencias en el constructor
 class HomeViewModel(
-    private val repository: UserRepositoryImpl
+    private val repository: UserRepositoryImpl,
+    private val signalRService: SignalRService // <-- Inyectamos SignalR
 ) : ViewModel() {
-
-    // 4. ¡Esta línea se elimina! Koin la provee.
-    // private val repository = UserRepositoryImpl(application)
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState = _uiState.asStateFlow()
 
     init {
-        loadNewRequests()
         loadUserProfile()
+        initializeSignalR()
+    }
+
+    private fun initializeSignalR() {
+        // Iniciar conexión en hilo secundario
+        viewModelScope.launch {
+            try {
+                signalRService.startConnection()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+            // Escuchar nuevas solicitudes que llegan por el socket
+            signalRService.jobRequests.collect { newJob ->
+                val currentList = _uiState.value.newRequests.toMutableList()
+                // Evitar duplicados si es necesario
+                if (currentList.none { it.id == newJob.id }) {
+                    currentList.add(0, newJob) // Agregar al inicio
+                    _uiState.update { it.copy(newRequests = currentList) }
+                }
+            }
+        }
     }
 
     fun loadUserProfile() {
@@ -78,62 +98,76 @@ class HomeViewModel(
     }
 
     private fun loadNewRequests() {
-        // Simulación de datos del backend
+        // Simulación de datos del backend con el NUEVO modelo
+        // Nota: Los campos 'id' ahora son String (GUID simulados)
         val requests = listOf(
             JobRequest(
-                id = 1,
-                clientName = "María González",
+                id = "job-guid-1",
+                clientId = "client-1",
+                professionalId = "prof-1",
                 specialty = "Plumbing",
-                location = "San Isidro, Lima",
-                dateTime = Date(),
                 description = "Kitchen sink leak needs urgent repair",
-                price = 120.0,
-                isUrgent = true,
-                // Datos de pago
-                totalAmount = 120.0,
-                initialPayment = 60.0,
-                finalPayment = 60.0,
-                isFinalPaymentCompleted = false // Pago final pendiente
+                address = "San Isidro, Lima",
+                scheduledDate = "2025-11-15T10:00:00", // Formato ISO String
+                scheduledHour = "10:00 AM",
+                additionalMessage = "Please bring tools",
+                categories = listOf("Repair", "Urgent"),
+                paymentMethod = "Cash",
+                totalCost = 120.0,
+                status = "Pending"
             ),
             JobRequest(
-                id = 2,
-                clientName = "Roberto Silva",
+                id = "job-guid-2",
+                clientId = "client-2",
+                professionalId = "prof-1",
                 specialty = "Electrical",
-                location = "Miraflores, Lima",
-                dateTime = Date(),
-                description = "Install new ceiling fan in living room",
-                price = 200.0,
-                isPending = true,
-                // Datos de pago
-                totalAmount = 200.0,
-                initialPayment = 100.0,
-                finalPayment = 100.0,
-                isFinalPaymentCompleted = true // Pago final completado
-            ),
-            JobRequest(
-                id = 3,
-                clientName = "Ana Torres",
-                specialty = "Carpentry",
-                location = "Surco, Lima",
-                dateTime = Date(),
-                description = "Custom bookshelf installation",
-                price = 350.0,
-                // Datos de pago
-                totalAmount = 350.0,
-                initialPayment = 175.0,
-                finalPayment = 175.0,
-                isFinalPaymentCompleted = true
+                description = "Install new ceiling fan",
+                address = "Miraflores, Lima",
+                scheduledDate = "2025-11-16T14:30:00",
+                scheduledHour = "02:30 PM",
+                additionalMessage = null,
+                categories = listOf("Installation"),
+                paymentMethod = "Credit Card",
+                totalCost = 200.0,
+                status = "Pending"
             )
         )
         _uiState.update { it.copy(newRequests = requests) }
     }
     fun acceptRequest(request: JobRequest) {
-        println("Request accepted: ${request.clientName}")
-        // Lógica para aceptar y eliminar de la lista de "nuevos"
+        viewModelScope.launch {
+            // 1. Llamar a SignalR para aceptar
+            // Nota: Usamos el totalCost original como propuesta inicial,
+            // o podrías abrir un Dialog para cambiar el precio.
+            signalRService.respondToRequest(
+                jobId = request.id,
+                accepted = true,
+                proposedCost = request.totalCost
+            )
+
+            // 2. Actualizar UI localmente (remover de la lista de pendientes)
+            removeRequestFromList(request.id)
+        }
     }
 
     fun declineRequest(request: JobRequest) {
-        println("Request declined: ${request.clientName}")
-        // Lógica para declinar
+        viewModelScope.launch {
+            signalRService.respondToRequest(
+                jobId = request.id,
+                accepted = false,
+                proposedCost = 0.0
+            )
+            removeRequestFromList(request.id)
+        }
+    }
+
+    private fun removeRequestFromList(jobId: String) {
+        val updatedList = _uiState.value.newRequests.filterNot { it.id == jobId }
+        _uiState.update { it.copy(newRequests = updatedList) }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        signalRService.stopConnection()
     }
 }

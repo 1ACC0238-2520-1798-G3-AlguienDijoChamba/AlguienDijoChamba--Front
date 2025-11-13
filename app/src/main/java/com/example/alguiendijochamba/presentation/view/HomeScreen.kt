@@ -19,19 +19,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.alguiendijochamba.R
 import com.example.alguiendijochamba.domain.model.JobRequest
 import com.example.alguiendijochamba.presentation.viewmodel.HomeUiState
 import com.example.alguiendijochamba.presentation.viewmodel.HomeViewModel
 import com.example.alguiendijochamba.ui.theme.PrimaryBlue
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 import org.koin.androidx.compose.koinViewModel
 
@@ -79,7 +76,6 @@ fun HomeScreen(
 
 @Composable
 fun WelcomeHeader(uiState: HomeUiState) {
-    // Definimos las funciones Composable del Badge para que el compilador no se queje
     val messageBadge: @Composable (BoxScope.() -> Unit)? = remember(uiState.messageCount) {
         if (uiState.messageCount > 0) {
             { Badge { Text("${uiState.messageCount}") } }
@@ -109,25 +105,21 @@ fun WelcomeHeader(uiState: HomeUiState) {
                     Text(uiState.userName, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 }
                 Row {
-                    // USO DEL CONDICIONAL IF EXTERNO para evitar errores de nullabilidad
                     if (messageBadge != null) {
                         BadgedBox(badge = messageBadge) {
                             Icon(Icons.Default.ChatBubble, contentDescription = "Mensajes", tint = Color.White)
                         }
                     } else {
-                        // Mostrar sin badge si es 0
                         Icon(Icons.Default.ChatBubble, contentDescription = "Mensajes", tint = Color.White)
                     }
 
                     Spacer(Modifier.width(16.dp))
 
-                    // USO DEL CONDICIONAL IF EXTERNO para evitar errores de nullabilidad
                     if (notificationBadge != null) {
                         BadgedBox(badge = notificationBadge) {
                             Icon(Icons.Default.Notifications, contentDescription = "Notificaciones", tint = Color.White)
                         }
                     } else {
-                        // Mostrar sin badge si es 0
                         Icon(Icons.Default.Notifications, contentDescription = "Notificaciones", tint = Color.White)
                     }
                 }
@@ -185,27 +177,46 @@ fun JobRequestCard(request: JobRequest, onAccept: () -> Unit, onDecline: () -> U
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                Text(request.clientName, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                if (request.isUrgent) Badge(containerColor = Color.Red.copy(alpha = 0.1f)) { Text("Urgente", color = Color.Red) }
-                if (request.isPending) Badge { Text("Pendiente") }
+                // CORRECCIÓN: Usamos "Cliente" genérico o el ID, ya que clientName no viene en este objeto
+                Text("Cliente (ID: ${request.clientId.take(4)}...)", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+
+                // CORRECCIÓN: Usamos el status que viene del backend
+                if (request.status == "Pending") {
+                    Badge(containerColor = Color.Red.copy(alpha = 0.1f)) { Text("Pendiente", color = Color.Red) }
+                } else {
+                    Badge { Text(request.status) }
+                }
             }
             Text(request.specialty, color = PrimaryBlue, style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.height(8.dp))
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(4.dp))
-                Text(request.location, style = MaterialTheme.typography.bodyMedium)
+                // CORRECCIÓN: location -> address
+                Text(request.address, style = MaterialTheme.typography.bodyMedium)
             }
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(4.dp))
-                Text(request.dateTime.toFormattedString(), style = MaterialTheme.typography.bodyMedium)
+                // CORRECCIÓN: dateTime -> scheduledDate (String) + formateo
+                Text("${formatDateString(request.scheduledDate)} - ${request.scheduledHour}", style = MaterialTheme.typography.bodyMedium)
             }
             Spacer(Modifier.height(8.dp))
             Text(request.description)
+
+            // Mostrar mensaje adicional si existe
+            request.additionalMessage?.let {
+                Spacer(Modifier.height(4.dp))
+                Text("Nota: $it", style = MaterialTheme.typography.bodySmall)
+            }
+
             Spacer(Modifier.height(16.dp))
+
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                Text("S/${"%.2f".format(request.price)}", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                // CORRECCIÓN: totalAmount/price -> totalCost
+                Text("S/${"%.2f".format(request.totalCost)}", fontWeight = FontWeight.Bold, fontSize = 20.sp)
                 Row {
                     OutlinedButton(onClick = onDecline) { Text("Rechazar") }
                     Spacer(Modifier.width(8.dp))
@@ -240,20 +251,16 @@ fun BalanceTabContent(jobRequests: List<JobRequest>) {
 
 @Composable
 fun BalanceLedgerCard(request: JobRequest) {
-    // Definición explícita y nullable del Badge
-    val badgeContent: @Composable (BoxScope.() -> Unit)? = remember(request.id) {
-        if (request.id == 1) {
-            { Badge { Text("2") } }
-        } else null
-    }
+    // CORRECCIÓN: id es String ahora. Quitamos la lógica de badge dummy o la adaptamos
+    val badgeContent: @Composable (BoxScope.() -> Unit)? = null
 
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
 
             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                Text(request.clientName, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                // CORRECCIÓN: clientName -> clientId
+                Text("Cliente ${request.clientId.take(4)}", fontWeight = FontWeight.Bold, fontSize = 18.sp)
 
-                // USO DEL CONDICIONAL IF EXTERNO para evitar errores de nullabilidad
                 if (badgeContent != null) {
                     BadgedBox(badge = badgeContent) {}
                 }
@@ -266,12 +273,14 @@ fun BalanceLedgerCard(request: JobRequest) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(4.dp))
-                Text(request.location, style = MaterialTheme.typography.bodyMedium)
+                // CORRECCIÓN: location -> address
+                Text(request.address, style = MaterialTheme.typography.bodyMedium)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(4.dp))
-                Text(request.dateTime.toFormattedString(), style = MaterialTheme.typography.bodyMedium)
+                // CORRECCIÓN: formateo de fecha String
+                Text(formatDateString(request.scheduledDate), style = MaterialTheme.typography.bodyMedium)
             }
             Spacer(Modifier.height(8.dp))
 
@@ -282,17 +291,23 @@ fun BalanceLedgerCard(request: JobRequest) {
             Divider()
             Spacer(Modifier.height(8.dp))
 
-            PaymentDetailRow(title = "Total Amount:", amount = request.totalAmount)
+            // CORRECCIÓN: Cálculo de pagos (50% y 50%) basado en totalCost
+            val initialPayment = request.totalCost / 2
+            val finalPayment = request.totalCost / 2
+            // Asumimos completado si el status es "Completed"
+            val isFinalCompleted = request.status == "Completed"
+
+            PaymentDetailRow(title = "Total Amount:", amount = request.totalCost)
             PaymentDetailRow(
                 title = "Initial Payment:",
-                amount = request.initialPayment,
+                amount = initialPayment,
                 icon = Icons.AutoMirrored.Filled.Launch,
                 iconColor = PrimaryBlue
             )
             PaymentDetailRow(
                 title = "Final Payment:",
-                amount = request.finalPayment,
-                icon = if (request.isFinalPaymentCompleted) Icons.Default.CheckCircle else null,
+                amount = finalPayment,
+                icon = if (isFinalCompleted) Icons.Default.CheckCircle else null,
                 iconColor = Color(0xFF4CAF50)
             )
         }
@@ -324,15 +339,12 @@ fun PaymentDetailRow(
     }
 }
 
-// --- IMPLEMENTACIÓN FINAL DE EARNINGS ---
-
 @Composable
 fun EarningsTabContent() {
     Column(
         modifier = Modifier.padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Datos de prueba
         val pendingAmount = 450.0
         val availableAmount = 1250.0
         val totalEarned = 8750.0
@@ -374,7 +386,7 @@ fun EarningsTabContent() {
 fun EarningsCard(
     title: String,
     amount: Double,
-    icon: Any?, // Puede ser ImageVector o Painter
+    icon: Any?,
     iconColor: Color,
     isPainter: Boolean = false
 ) {
@@ -426,8 +438,19 @@ fun EarningsCard(
     }
 }
 
-
-private fun Date.toFormattedString(): String {
-    val sdf = SimpleDateFormat("EEE, d MMM 'a las' hh:mm a", Locale("es", "ES"))
-    return sdf.format(this)
+// Función auxiliar para formatear la fecha String (ISO) que viene del backend
+private fun formatDateString(isoDate: String): String {
+    return try {
+        // Asumimos que el formato viene como ISO-8601 (ej: 2025-11-13T10:00:00)
+        // Cortamos solo la parte de la fecha para mostrar simple
+        val datePart = isoDate.split("T")[0]
+        // Opcional: Usar SimpleDateFormat para hacerlo más bonito
+        // val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        // val outputFormat = SimpleDateFormat("dd MMM yyyy", Locale("es", "ES"))
+        // val date = inputFormat.parse(datePart)
+        // outputFormat.format(date!!)
+        datePart
+    } catch (e: Exception) {
+        isoDate // Si falla, mostramos el string original
+    }
 }

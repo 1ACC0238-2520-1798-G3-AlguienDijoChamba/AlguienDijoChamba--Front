@@ -16,6 +16,7 @@ composeBom = "2024.09.00"
 lifecycleViewmodelCompose = "2.9.4"
 navigationCompose = "2.9.5"
 retrofit = "3.0.0"
+signalr = "7.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -50,6 +51,7 @@ ui = { module = "androidx.compose.ui:ui" }
 ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
 ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+microsoft-signalr = { group = "com.microsoft.signalr", name = "signalr", version.ref = "signalr" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
