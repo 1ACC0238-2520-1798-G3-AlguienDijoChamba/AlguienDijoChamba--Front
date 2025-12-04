@@ -3,6 +3,7 @@ package com.example.alguiendijochamba.data.remote
 import android.util.Log
 import com.example.alguiendijochamba.data.local.SessionManager
 import com.example.alguiendijochamba.domain.model.JobRequest
+import com.google.gson.Gson // 👈 Asegúrate de importar esto
 import com.microsoft.signalr.HubConnection
 import com.microsoft.signalr.HubConnectionBuilder
 import com.microsoft.signalr.HubConnectionState
@@ -17,77 +18,83 @@ import java.math.BigDecimal
 class SignalRService(private val sessionManager: SessionManager) {
 
     private var hubConnection: HubConnection? = null
+    private val gson = Gson() // Instancia de Gson para conversión manual
 
-    // Usamos SharedFlow para emitir eventos a la UI (ViewModel)
+    // Flow para emitir eventos a la UI
     private val _jobRequests = MutableSharedFlow<JobRequest>()
     val jobRequests = _jobRequests.asSharedFlow()
 
-    // ⚠️ IMPORTANTE:
-    // Usa "http://10.0.2.2:5000/..." SI usas el Emulador de Android oficial.
-    // Usa "http://<TU_IP_LOCAL>:5000/..." (ej: 192.168.1.15:5000) SI usas un celular físico por USB/Wifi.
-    // Asegúrate de que tu backend .NET permita conexiones externas (listen on 0.0.0.0 o similar).
+    // ⚠️ REVISA TU IP AQUÍ:
     private val HUB_URL = "http://10.0.2.2:5000/hubs/servicerequests"
 
     fun startConnection() {
         val token = sessionManager.fetchAuthToken()
         if (token.isNullOrEmpty()) {
-            Log.e("SignalR", "❌ No hay token, no se puede conectar.")
+            Log.e("SignalR_DEBUG", "❌ ERROR: No hay token guardado. Imposible conectar.")
             return
         }
 
         try {
-            // Configurar la conexión
+            Log.e("SignalR_DEBUG", "🔄 Intentando conectar a $HUB_URL con token...")
+
             hubConnection = HubConnectionBuilder.create(HUB_URL)
-                .withAccessTokenProvider(Single.just(token)) // Envía el token en el QueryString
+                .withAccessTokenProvider(Single.just(token))
                 .build()
 
-            // --- ESCUCHAR EVENTOS DEL BACKEND ---
+            // -----------------------------------------------------------------------
+            // 🚀 CORRECCIÓN CLAVE: Escuchar como 'Object' para evitar fallos de conversión
+            // -----------------------------------------------------------------------
+            hubConnection?.on("ReceiveNewRequest", { rawData ->
+                try {
+                    // 1. Ver qué llegó realmente (esto aparecerá en el Logcat sí o sí)
+                    Log.e("SignalR_DEBUG", "🔥🔥🔥 RAW DATA LLEGÓ: $rawData")
 
-            // Escuchar "ReceiveNewRequest" (viene del CreateJobRequestCommandHandler en .NET)
-            hubConnection?.on("ReceiveNewRequest", { job: JobRequest ->
+                    // 2. Convertir manualmente el objeto crudo (LinkedTreeMap) a JSON y luego a JobRequest
+                    val jsonString = gson.toJson(rawData)
+                    val job = gson.fromJson(jsonString, JobRequest::class.java)
 
-                // 🔍 LOGS DE DEPURACIÓN: Verifica aquí si llega el precio
-                Log.d("SignalR", "🚨 Nueva solicitud recibida ID: ${job.id}")
-                Log.d("SignalR", "💰 Costo recibido del cliente: S/${job.totalCost}")
-                Log.d("SignalR", "📍 Dirección: ${job.address}")
+                    Log.e("SignalR_DEBUG", "✅ Conversión Exitosa! ID: ${job.id}, Costo: ${job.totalCost}")
 
-                // Emitir el evento a la UI (ViewModel)
-                CoroutineScope(Dispatchers.IO).launch {
-                    _jobRequests.emit(job)
+                    // 3. Emitir a la UI
+                    CoroutineScope(Dispatchers.IO).launch {
+                        _jobRequests.emit(job)
+                    }
+                } catch (e: Exception) {
+                    Log.e("SignalR_DEBUG", "❌ Error al convertir JSON manual: ${e.message}")
+                    e.printStackTrace()
                 }
-            }, JobRequest::class.java)
+            }, Object::class.java) // 👈 IMPORTANTE: Escuchamos Object, no JobRequest
 
-            // Iniciar conexión
-            // blockingAwait() se usa aquí para asegurar la conexión inicial,
-            // pero asegúrate de llamar a startConnection() desde una corrutina (viewModelScope)
+            // --- Listener de Estado ---
+            hubConnection?.onClosed {
+                Log.e("SignalR_DEBUG", "⚠️ Conexión CERRADA. Error: $it")
+            }
+
+            // INICIAR
             hubConnection?.start()?.blockingAwait()
-            Log.d("SignalR", "✅ Conectado exitosamente. Estado: ${hubConnection?.connectionState}")
+            Log.e("SignalR_DEBUG", "✅ CONECTADO EXITOSAMENTE. Estado: ${hubConnection?.connectionState}")
 
         } catch (e: Exception) {
-            Log.e("SignalR", "❌ Error al conectar: ${e.message}")
+            Log.e("SignalR_DEBUG", "❌ CRASH AL CONECTAR: ${e.message}")
             e.printStackTrace()
         }
     }
 
     fun stopConnection() {
         hubConnection?.stop()
-        Log.d("SignalR", "🛑 Desconectado.")
+        Log.e("SignalR_DEBUG", "🛑 Desconectado manualmente.")
     }
 
-    // --- ENVIAR RESPUESTA AL BACKEND ---
-    // Llama al método 'RespondToRequest' definido en tu ServiceRequestHub.cs en .NET
     fun respondToRequest(jobId: String, accepted: Boolean, proposedCost: Double) {
         if (hubConnection?.connectionState == HubConnectionState.CONNECTED) {
             try {
-                // El backend espera: Guid jobId, bool accepted, decimal proposedCost
-                // Convertimos Double a BigDecimal para el tipo 'decimal' de C#
                 hubConnection?.send("RespondToRequest", jobId, accepted, BigDecimal.valueOf(proposedCost))
-                Log.d("SignalR", "📤 Respuesta enviada: Accepted=$accepted, Cost=$proposedCost")
+                Log.e("SignalR_DEBUG", "📤 Respuesta enviada: $accepted")
             } catch (e: Exception) {
-                Log.e("SignalR", "❌ Error enviando respuesta: ${e.message}")
+                Log.e("SignalR_DEBUG", "❌ Error al enviar respuesta: ${e.message}")
             }
         } else {
-            Log.e("SignalR", "⚠️ No conectado. No se pudo enviar respuesta. Estado: ${hubConnection?.connectionState}")
+            Log.e("SignalR_DEBUG", "⚠️ No se pudo responder: No conectado.")
         }
     }
 }

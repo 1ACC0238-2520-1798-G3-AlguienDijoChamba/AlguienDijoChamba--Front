@@ -1,6 +1,7 @@
 package com.example.alguiendijochamba.presentation.viewmodel
 
 // 1. Quita la importación de Application
+import android.util.Log
 import androidx.lifecycle.ViewModel // 2. Cambia de AndroidViewModel a ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.alguiendijochamba.data.repository.UserRepositoryImpl
@@ -56,6 +57,7 @@ class HomeViewModel(
                 if (currentList.none { it.id == newJob.id }) {
                     currentList.add(0, newJob) // Agregar al inicio
                     _uiState.update { it.copy(newRequests = currentList) }
+                    Log.d("HomeViewModel", "UI Actualizada con Job: ${newJob.id}")
                 }
             }
         }
