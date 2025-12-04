@@ -1,18 +1,20 @@
-// presentation/view/HomeScreen.kt
 package com.example.alguiendijochamba.presentation.view
 
+import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Launch
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.automirrored.filled.Launch
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,8 +30,6 @@ import com.example.alguiendijochamba.domain.model.JobRequest
 import com.example.alguiendijochamba.presentation.viewmodel.HomeUiState
 import com.example.alguiendijochamba.presentation.viewmodel.HomeViewModel
 import com.example.alguiendijochamba.ui.theme.PrimaryBlue
-import java.text.SimpleDateFormat
-import java.util.Locale
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,6 +39,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -65,7 +66,18 @@ fun HomeScreen(
                 }
 
                 when (uiState.selectedTab) {
-                    0 -> RequestsTabContent(uiState.newRequests, viewModel)
+                    0 -> RequestsTabContent(
+                        requests = uiState.newRequests,
+                        viewModel = viewModel,
+                        // 🟢 CORRECCIÓN: Aquí pasamos la función de navegación requerida
+                        onNavigateToDetail = { jobId ->
+                            Log.d("HomeScreen", "Navegando a detalle de Job: $jobId")
+                            // Descomenta y ajusta tu ruta cuando tengas la pantalla de detalle creada:
+                            // navController.navigate("requests_detail/$jobId")
+                            // O si usas el BottomBar para ir a la lista general:
+                            // navController.navigate(BottomBarScreen.Requests.route)
+                        }
+                    )
                     1 -> BalanceTabContent(uiState.newRequests)
                     2 -> EarningsTabContent()
                 }
@@ -152,6 +164,7 @@ fun WelcomeHeader(uiState: HomeUiState) {
 fun RequestsTabContent(
     requests: List<JobRequest>,
     viewModel: HomeViewModel,
+    onNavigateToDetail: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.padding(16.dp)) {
@@ -164,7 +177,8 @@ fun RequestsTabContent(
                     JobRequestCard(
                         request = request,
                         onAccept = { viewModel.acceptRequest(request) },
-                        onDecline = { viewModel.declineRequest(request) }
+                        onDecline = { viewModel.declineRequest(request) },
+                        onNavigateToDetail = onNavigateToDetail
                     )
                 }
             }
@@ -173,14 +187,19 @@ fun RequestsTabContent(
 }
 
 @Composable
-fun JobRequestCard(request: JobRequest, onAccept: () -> Unit, onDecline: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+fun JobRequestCard(request: JobRequest, onAccept: () -> Unit, onDecline: () -> Unit, onNavigateToDetail: (String) -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                onNavigateToDetail(request.id)
+            },
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                // CORRECCIÓN: Usamos "Cliente" genérico o el ID, ya que clientName no viene en este objeto
                 Text("Cliente (ID: ${request.clientId.take(4)}...)", fontWeight = FontWeight.Bold, fontSize = 18.sp)
 
-                // CORRECCIÓN: Usamos el status que viene del backend
                 if (request.status == "Pending") {
                     Badge(containerColor = Color.Red.copy(alpha = 0.1f)) { Text("Pendiente", color = Color.Red) }
                 } else {
@@ -193,20 +212,17 @@ fun JobRequestCard(request: JobRequest, onAccept: () -> Unit, onDecline: () -> U
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(4.dp))
-                // CORRECCIÓN: location -> address
                 Text(request.address, style = MaterialTheme.typography.bodyMedium)
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(4.dp))
-                // CORRECCIÓN: dateTime -> scheduledDate (String) + formateo
                 Text("${formatDateString(request.scheduledDate)} - ${request.scheduledHour}", style = MaterialTheme.typography.bodyMedium)
             }
             Spacer(Modifier.height(8.dp))
             Text(request.description)
 
-            // Mostrar mensaje adicional si existe
             request.additionalMessage?.let {
                 Spacer(Modifier.height(4.dp))
                 Text("Nota: $it", style = MaterialTheme.typography.bodySmall)
@@ -214,14 +230,36 @@ fun JobRequestCard(request: JobRequest, onAccept: () -> Unit, onDecline: () -> U
 
             Spacer(Modifier.height(16.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                // CORRECCIÓN: totalAmount/price -> totalCost
-                Text("S/${"%.2f".format(request.totalCost)}", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                Row {
-                    OutlinedButton(onClick = onDecline) { Text("Rechazar") }
-                    Spacer(Modifier.width(8.dp))
-                    Button(onClick = onAccept) { Text("Aceptar") }
-                }
+            // --- SECCIÓN PRECIO RESALTADO ---
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFE8F5E9), shape = RoundedCornerShape(8.dp))
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Total a recibir:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF1B5E20)
+                )
+                Text(
+                    text = "S/${"%.2f".format(request.totalCost)}",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 22.sp,
+                    color = Color(0xFF2E7D32)
+                )
+            }
+            // ---------------------------------
+
+            Spacer(Modifier.height(16.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(onClick = onDecline) { Text("Rechazar") }
+                Spacer(Modifier.width(8.dp))
+                Button(onClick = onAccept) { Text("Aceptar") }
             }
         }
     }
@@ -251,14 +289,12 @@ fun BalanceTabContent(jobRequests: List<JobRequest>) {
 
 @Composable
 fun BalanceLedgerCard(request: JobRequest) {
-    // CORRECCIÓN: id es String ahora. Quitamos la lógica de badge dummy o la adaptamos
     val badgeContent: @Composable (BoxScope.() -> Unit)? = null
 
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
 
             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                // CORRECCIÓN: clientName -> clientId
                 Text("Cliente ${request.clientId.take(4)}", fontWeight = FontWeight.Bold, fontSize = 18.sp)
 
                 if (badgeContent != null) {
@@ -273,13 +309,11 @@ fun BalanceLedgerCard(request: JobRequest) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(4.dp))
-                // CORRECCIÓN: location -> address
                 Text(request.address, style = MaterialTheme.typography.bodyMedium)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(4.dp))
-                // CORRECCIÓN: formateo de fecha String
                 Text(formatDateString(request.scheduledDate), style = MaterialTheme.typography.bodyMedium)
             }
             Spacer(Modifier.height(8.dp))
@@ -291,10 +325,8 @@ fun BalanceLedgerCard(request: JobRequest) {
             Divider()
             Spacer(Modifier.height(8.dp))
 
-            // CORRECCIÓN: Cálculo de pagos (50% y 50%) basado en totalCost
             val initialPayment = request.totalCost / 2
             val finalPayment = request.totalCost / 2
-            // Asumimos completado si el status es "Completed"
             val isFinalCompleted = request.status == "Completed"
 
             PaymentDetailRow(title = "Total Amount:", amount = request.totalCost)
@@ -318,7 +350,7 @@ fun BalanceLedgerCard(request: JobRequest) {
 fun PaymentDetailRow(
     title: String,
     amount: Double,
-    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    icon: ImageVector? = null,
     iconColor: Color = Color.Transparent
 ) {
     Row(
@@ -438,19 +470,11 @@ fun EarningsCard(
     }
 }
 
-// Función auxiliar para formatear la fecha String (ISO) que viene del backend
 private fun formatDateString(isoDate: String): String {
     return try {
-        // Asumimos que el formato viene como ISO-8601 (ej: 2025-11-13T10:00:00)
-        // Cortamos solo la parte de la fecha para mostrar simple
         val datePart = isoDate.split("T")[0]
-        // Opcional: Usar SimpleDateFormat para hacerlo más bonito
-        // val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-        // val outputFormat = SimpleDateFormat("dd MMM yyyy", Locale("es", "ES"))
-        // val date = inputFormat.parse(datePart)
-        // outputFormat.format(date!!)
         datePart
     } catch (e: Exception) {
-        isoDate // Si falla, mostramos el string original
+        isoDate
     }
 }

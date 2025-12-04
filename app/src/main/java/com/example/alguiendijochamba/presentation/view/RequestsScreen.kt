@@ -1,6 +1,7 @@
 // presentation/view/RequestsScreen.kt
 package com.example.alguiendijochamba.presentation.view
 
+import android.util.Log // 🟢 Importación necesaria para el Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -43,6 +44,12 @@ fun RequestsScreen(
         RequestsTabContent(
             requests = uiState.newRequests,
             viewModel = viewModel,
+            // 🟢 CORRECCIÓN: Agregamos el parámetro obligatorio de navegación
+            onNavigateToDetail = { jobId ->
+                Log.d("RequestsScreen", "Click en solicitud ID: $jobId")
+                // Aquí pondrás la navegación real cuando crees la pantalla de detalle
+                // navController.navigate("request_detail/$jobId")
+            },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
