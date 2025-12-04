@@ -18,6 +18,7 @@ import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import com.example.alguiendijochamba.data.remote.SignalRService
+import com.example.alguiendijochamba.presentation.viewmodel.CalendarViewModel
 
 // Este es el módulo principal de Koin
 val appModule = module {
@@ -34,7 +35,11 @@ val appModule = module {
             .build()
     }
     single {
-        val gson = GsonBuilder().serializeNulls().create()
+        val gson = GsonBuilder()
+            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+            .serializeNulls()
+            .create()
+
         val BASE_URL   = "http://10.0.2.2:5000/"
 
         Retrofit.Builder()
@@ -62,6 +67,7 @@ val appModule = module {
         )
     }
     viewModel { ProfileViewModel(get()) }
+    viewModel { CalendarViewModel(get()) }
 
     // ¡CORRECCIÓN! Añadimos el tercer 'get()' para SessionManager
     viewModel { RegisterViewModel(get(), get(), get()) }

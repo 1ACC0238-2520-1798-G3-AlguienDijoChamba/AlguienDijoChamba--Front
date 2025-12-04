@@ -108,6 +108,17 @@ class UserRepositoryImpl(
         }
     } catch (e: Exception) { Result.failure(e) }
 
+    suspend fun getScheduledJobs(): Result<List<JobRequestDto>> = try {
+        val response = apiService.getScheduledJobs()
+        if (response.isSuccessful && response.body() != null) {
+            Result.success(response.body()!!)
+        } else {
+            Result.failure(Exception("Error al obtener agenda: ${response.code()}"))
+        }
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
     suspend fun updateMyProfile(updateRequest: UpdateProfileRequestDto): Result<Unit> = try {
         val response = apiService.updateMyProfile(updateRequest)
         if (response.isSuccessful) {

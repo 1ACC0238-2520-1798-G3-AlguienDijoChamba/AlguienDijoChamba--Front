@@ -73,6 +73,10 @@ fun MainScreen() {
             // 1. Home
             composable(BottomBarScreen.Home.route) { HomeScreen(navController) }
 
+            composable(BottomBarScreen.Calendar.route) {
+                CalendarScreen(navController) // <-- Reemplaza Text("Pantalla de Calendario") por esto
+            }
+
             // 2. Solicitudes
             composable(BottomBarScreen.Requests.route) { RequestsScreen(navController) }
 

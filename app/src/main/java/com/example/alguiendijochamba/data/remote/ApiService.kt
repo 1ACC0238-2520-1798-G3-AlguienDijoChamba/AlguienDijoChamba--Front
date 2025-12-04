@@ -1,6 +1,7 @@
 package com.example.alguiendijochamba.data.remote
 
 import com.example.alguiendijochamba.data.model.CompleteProfileRequestDto // <-- NUEVO
+import com.example.alguiendijochamba.data.model.JobRequestDto
 import com.example.alguiendijochamba.data.model.UploadResponseDto // <-- NUEVO
 import com.example.alguiendijochamba.data.model.LoginRequestDto
 import com.example.alguiendijochamba.data.model.LoginResponseDto
@@ -25,6 +26,9 @@ interface ApiService {
 
     @GET("api/v1/professionals/my-profile")
     suspend fun getMyProfile(): Response<ProfileResponseDto>
+
+    @GET("api/v1/jobs/scheduled")
+    suspend fun getScheduledJobs(): Response<List<JobRequestDto>>
 
     // Actualizar perfil del usuario
     @PUT("api/v1/professionals/my-profile")
