@@ -16,4 +16,6 @@ data class JobRequest(
     val paymentMethod: String,
     val totalCost: Double,
     val status: String
+
+
 )
